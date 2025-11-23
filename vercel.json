@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "cron": [
+    {
+      "path": "/api/notifications/daily",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/planning/shift-reminders",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/messages/cleanup",
+      "schedule": "0 3 * * 0"
+    }
+  ]
+}
+

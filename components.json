@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "name": "docta",
+  "tsx": true,
+  "rsc": true,
+  "style": "new-york",
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "app/globals.css",
+    "baseColor": "zinc",
+    "prefix": "",
+    "cssVariables": true,
+    "v": 4
+  },
+  "aliases": {
+    "components": "@/components/ui",
+    "utils": "@/lib/utils"
+  }
+}
+
