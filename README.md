@@ -68,6 +68,29 @@ Le fichier `vercel.json` configure des tâches cron (planification côté Vercel
 
 Assurez-vous que chaque route existe et vérifie le header/secrets (ex: `CRON_SECRET`).
 
+### Déploiement sur Vercel et sécurisation
+- Sur Vercel (Dashboard > Project Settings > Environment Variables), ajoutez `CRON_SECRET` avec une valeur longue et aléatoire (≥16 caractères).
+- Les jobs cron fonctionnent uniquement sur le déploiement de production (pas de preview). Vercel enverra automatiquement `Authorization: Bearer <CRON_SECRET>` aux endpoints configurés.
+- Le fichier `vercel.json` utilise la clé `crons` (et non `cron`), par exemple:
+
+```json
+{
+  "version": 2,
+  "crons": [
+    { "path": "/api/notifications/daily", "schedule": "0 8 * * *" },
+    { "path": "/api/planning/shift-reminders", "schedule": "*/15 * * * *" },
+    { "path": "/api/messages/cleanup", "schedule": "0 3 * * 0" }
+  ]
+}
+```
+
+### Tests
+- Localement: démarrez `npm run dev` puis testez avec:
+  - `curl -i -H "Authorization: Bearer <CRON_SECRET>" http://localhost:3000/api/notifications/daily`
+  - `curl -i -H "Authorization: Bearer <CRON_SECRET>" http://localhost:3000/api/planning/shift-reminders`
+  - `curl -i -H "Authorization: Bearer <CRON_SECRET>" http://localhost:3000/api/messages/cleanup`
+- En production (Vercel): vérifiez l’onglet Settings > Cron Jobs et les logs d’invocation; vous pouvez aussi lancer manuellement les endpoints avec `curl` en passant l’Authorization Bearer identique à votre `CRON_SECRET`.
+
 ## Scripts NPM
 - `dev`: lance le serveur de développement
 - `build`: build de production

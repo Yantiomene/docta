@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "cron": [
+  "crons": [
     {
       "path": "/api/notifications/daily",
       "schedule": "0 8 * * *"
@@ -15,4 +15,3 @@
     }
   ]
 }
-
