@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/planning/shift-reminders",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/messages/cleanup",
