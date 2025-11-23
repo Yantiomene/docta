@@ -8,10 +8,6 @@
     {
       "path": "/api/planning/shift-reminders",
       "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/messages/cleanup",
-      "schedule": "0 3 * * 0"
     }
   ]
 }
