@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const roleRegex = /^\/(admin|medecin|infirmiere|patient)(?:\/|$)/;
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { nextUrl, cookies } = req;
   const pathname = nextUrl.pathname;
 
@@ -28,4 +28,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/(admin|medecin|infirmiere|patient)(/:path*)?"],
 };
-
