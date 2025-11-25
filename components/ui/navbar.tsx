@@ -1,7 +1,29 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
+import { useAuth } from "@/components/features/auth/AuthProvider";
+import { getSupabaseClient } from "@/lib/supabase";
+
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yan2016tiomene@gmail.com";
 
 export default function Navbar() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const supabase = getSupabaseClient();
+
+  const name = (user?.user_metadata?.name as string | undefined) || undefined;
+  const avatarUrl = (user?.user_metadata?.avatar_url as string | undefined) || undefined;
+  const email = user?.email || "";
+  const initial = (name || email || "?").charAt(0).toUpperCase();
+  const isAdmin = !!user && (user.user_metadata?.role === "admin" || email === ADMIN_EMAIL);
+
+  async function onLogout() {
+    await supabase.auth.signOut();
+    setOpen(false);
+    // Refresh to clear any user-specific UI
+    window.location.href = "/";
+  }
+
   return (
     <header className="bg-background border-b border-black/10 dark:border-white/15">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between text-foreground">
@@ -11,14 +33,36 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-4 text-sm">
           <Link href="/" className="hover:underline">Home</Link>
-          <Link href="/auth/login" className="hover:underline">Login</Link>
-          <Link href="/admin" className="hover:underline">Admin</Link>
-          <Link href="/medecin" className="hover:underline">Médecin</Link>
-          <Link href="/infirmiere" className="hover:underline">Infirmière</Link>
-          <Link href="/patient" className="hover:underline">Patient</Link>
+          {!user ? (
+            <Link href="/auth/login" className="hover:underline">Login</Link>
+          ) : (
+            <div className="relative">
+              <button
+                className="size-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden"
+                onClick={() => setOpen((v) => !v)}
+                aria-label="User menu"
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-semibold">{initial}</span>
+                )}
+              </button>
+              {open && (
+                <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow">
+                  <div className="px-3 py-2 text-xs text-gray-600">{name || email}</div>
+                  <Link href="/settings" className="block px-3 py-2 hover:bg-gray-50">Preferences</Link>
+                  {isAdmin && (
+                    <Link href="/admin" className="block px-3 py-2 hover:bg-gray-50">User Administration</Link>
+                  )}
+                  <button onClick={onLogout} className="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </nav>
     </header>
   );
 }
-

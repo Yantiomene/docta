@@ -4,14 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 
-const roles = ["admin", "medecin", "infirmiere", "patient"] as const;
-
 export default function RegisterPage() {
   const router = useRouter();
   const supabase = getSupabaseClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<typeof roles[number]>("patient");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,22 +17,28 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    if (password !== confirmPassword) {
+      setLoading(false);
+      setError("Passwords do not match");
+      return;
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { role },
-      },
     });
     setLoading(false);
     if (error) {
+      // If user already exists, redirect to login page
+      const msg = error.message.toLowerCase();
+      if (msg.includes("already") && (msg.includes("registered") || msg.includes("exists"))) {
+        router.replace("/auth/login");
+        return;
+      }
       setError(error.message);
       return;
     }
-    // Depending on Supabase email confirmation settings, user may need to confirm.
-    const userRole = (data.user?.user_metadata?.role as string | undefined) || role;
-    document.cookie = `role=${userRole}; path=/`;
-    router.push(`/${userRole}`);
+    // Redirect to login after signup (email confirmation may be required)
+    router.replace("/auth/login");
   }
 
   return (
@@ -65,26 +69,23 @@ export default function RegisterPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Role</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as typeof roles[number])}
+            <label className="text-sm font-medium">Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full rounded-md border px-3 py-2"
-            >
-              {roles.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+              placeholder="••••••••"
+              required
+            />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="w-full rounded-md bg-black text-white px-3 py-2" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
+          <p className="text-sm">Already registered? <a href="/auth/login" className="underline">Login</a></p>
         </form>
       </div>
     </div>
   );
 }
-
