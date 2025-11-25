@@ -1,38 +1,47 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 
-export default function LoginPage() {
+const roles = ["admin", "medecin", "infirmiere", "patient"] as const;
+
+export default function RegisterPage() {
   const router = useRouter();
   const supabase = getSupabaseClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<typeof roles[number]>("patient");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role },
+      },
+    });
     setLoading(false);
     if (error) {
       setError(error.message);
       return;
     }
-    const role = (data.user?.user_metadata?.role as string | undefined) || "patient";
-    document.cookie = `role=${role}; path=/`;
-    router.push(`/${role}`);
+    // Depending on Supabase email confirmation settings, user may need to confirm.
+    const userRole = (data.user?.user_metadata?.role as string | undefined) || role;
+    document.cookie = `role=${userRole}; path=/`;
+    router.push(`/${userRole}`);
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-lg border p-6 space-y-4">
-        <h1 className="text-xl font-semibold">Docta Login</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <h1 className="text-xl font-semibold">Create Account</h1>
+        <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Email</label>
             <input
@@ -55,15 +64,27 @@ export default function LoginPage() {
               required
             />
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Role</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as typeof roles[number])}
+              className="w-full rounded-md border px-3 py-2"
+            >
+              {roles.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="w-full rounded-md bg-black text-white px-3 py-2" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Registering..." : "Register"}
           </button>
-          <p className="text-sm">
-            No account? <Link href="/auth/register">Register</Link>
-          </p>
         </form>
       </div>
     </div>
   );
 }
+

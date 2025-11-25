@@ -1,19 +1,22 @@
-// Placeholder supabase client for scaffolding without installing dependencies yet.
-// Integrate with '@supabase/supabase-js' later.
+import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 
-type SupabaseClientLike = unknown;
+let client: SupabaseClient | null = null;
 
-let client: SupabaseClientLike | null = null;
-
-export function getSupabaseClient(): SupabaseClientLike {
+export function getSupabaseClient(): SupabaseClient {
   if (client) return client;
-  // Initialize real client after adding dependencies and env vars
-  client = {} as SupabaseClientLike;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  client = createClient(url, anon, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
   return client;
 }
 
-export async function getCurrentUser(): Promise<{ id: string } | null> {
-  // Replace with supabase auth session retrieval
-  return null;
+export async function getCurrentUser(): Promise<User | null> {
+  const supabase = getSupabaseClient();
+  const { data } = await supabase.auth.getUser();
+  return data.user ?? null;
 }
-
