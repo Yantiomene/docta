@@ -25,7 +25,7 @@ export default function LoginPage() {
     }
     const role = (data.user?.user_metadata?.role as string | undefined) || "patient";
     document.cookie = `role=${role}; path=/`;
-    router.push(`/${role}`);
+    router.push(`/post-login`);
   }
 
   return (

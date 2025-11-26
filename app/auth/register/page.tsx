@@ -17,14 +17,29 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setLoading(false);
+      setError("Email is required");
+      return;
+    }
+    if (password.length < 8) {
+      setLoading(false);
+      setError("Password must be at least 8 characters");
+      return;
+    }
     if (password !== confirmPassword) {
       setLoading(false);
       setError("Passwords do not match");
       return;
     }
+    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL || ""}/auth/login`;
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
     });
     setLoading(false);
     if (error) {
