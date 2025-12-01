@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import type { CountryCode } from "libphonenumber-js";
 
@@ -58,7 +58,9 @@ export async function upsertProfileAction(formData: FormData) {
     avatar_url,
   } as const;
 
-  const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+  // Use service role client to bypass RLS issues when upserting own profile.
+  const admin = getServiceSupabase();
+  const { error } = await admin.from("profiles").upsert(payload, { onConflict: "id" });
   if (error) {
     redirect(`/profile/setup?error=${encodeURIComponent(error.message)}`);
   }
