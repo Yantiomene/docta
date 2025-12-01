@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabaseServer";
 
 export default async function PostLoginPage() {
@@ -25,6 +26,6 @@ export default async function PostLoginPage() {
   }
 
   const role = profile.role || "patient";
+  cookies().set({ name: "role", value: role, path: "/" });
   redirect(`/${role}`);
 }
-

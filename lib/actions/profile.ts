@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabaseServer";
 
 export async function upsertProfileAction(formData: FormData) {
@@ -41,7 +42,15 @@ export async function upsertProfileAction(formData: FormData) {
     redirect(`/profile/setup?error=${encodeURIComponent(error.message)}`);
   }
 
-  // On success, send the user to their default area
-  redirect("/patient");
-}
+  // Fetch the role from the profile to route correctly and set cookie
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
 
+  const role = profile?.role || "patient";
+  const cookieStore = cookies();
+  cookieStore.set({ name: "role", value: role, path: "/" });
+  redirect(`/${role}`);
+}
