@@ -24,18 +24,18 @@ export async function upsertProfileAction(formData: FormData) {
     redirect("/profile/setup?error=missing_fields");
   }
 
-  // Build and validate E.164 phone number if provided
-  let telephone: string | null = null;
-  if (countryCodeRaw || phoneRaw) {
-    const ccDigits = countryCodeRaw.replace(/[^0-9]/g, "");
-    const phoneDigits = phoneRaw.replace(/[^0-9]/g, "");
-    const constructed = `+${ccDigits}${phoneDigits}`;
-    const e164 = /^\+[1-9]\d{6,14}$/;
-    if (!ccDigits || !phoneDigits || !e164.test(constructed)) {
-      redirect("/profile/setup?error=invalid_phone");
-    }
-    telephone = constructed;
+  // Require phone and validate E.164 format
+  const ccDigits = countryCodeRaw.replace(/[^0-9]/g, "");
+  const phoneDigits = phoneRaw.replace(/[^0-9]/g, "");
+  if (!ccDigits || !phoneDigits) {
+    redirect("/profile/setup?error=missing_phone");
   }
+  const constructed = `+${ccDigits}${phoneDigits}`;
+  const e164 = /^\+[1-9]\d{6,14}$/;
+  if (!e164.test(constructed)) {
+    redirect("/profile/setup?error=invalid_phone");
+  }
+  const telephone = constructed;
 
   const payload = {
     id: user.id,

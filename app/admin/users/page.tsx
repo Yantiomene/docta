@@ -74,7 +74,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           </Select>
         </div>
         <Button type="submit">Apply</Button>
-        <Button type="button" variant="outline" onClick={() => { window.location.href = "/admin/users"; }}>Clear</Button>
+        <a href="/admin/users" className="inline-flex h-9 items-center rounded-md border border-gray-300 px-3 text-sm hover:bg-gray-50">Clear</a>
       </form>
 
       <div className="overflow-x-auto rounded-lg border mt-4">

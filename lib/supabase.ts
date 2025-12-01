@@ -10,10 +10,12 @@ export function getSupabaseClient(): SupabaseClient {
   client = createBrowserClient(url, anon, {
     cookies: {
       get(name: string) {
+        if (typeof document === "undefined") return undefined;
         const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
         return match ? decodeURIComponent(match[1]) : undefined;
       },
       set(name: string, value: string, options: any = {}) {
+        if (typeof document === "undefined") return;
         const opts = { path: "/", ...options };
         let cookie = `${name}=${encodeURIComponent(value)}; path=${opts.path}`;
         if (opts.maxAge) cookie += `; max-age=${opts.maxAge}`;
@@ -23,6 +25,7 @@ export function getSupabaseClient(): SupabaseClient {
         document.cookie = cookie;
       },
       remove(name: string, options: any = {}) {
+        if (typeof document === "undefined") return;
         const opts = { path: "/", ...options };
         document.cookie = `${name}=; path=${opts.path}; max-age=0`;
       },
