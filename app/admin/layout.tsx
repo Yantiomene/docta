@@ -7,6 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <h2 className="text-lg font-semibold">Admin</h2>
         <nav className="space-y-2">
           <Link href="/admin" className="block hover:underline">Dashboard</Link>
+          <Link href="/admin/users" className="block hover:underline">Users</Link>
           <Link href="/admin/patients" className="block hover:underline">Patients</Link>
           <Link href="/admin/hospitalizations" className="block hover:underline">Hospitalizations</Link>
           <Link href="/admin/soins" className="block hover:underline">Soins</Link>
