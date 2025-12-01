@@ -54,7 +54,7 @@ export default function Navbar() {
                   <div className="px-3 py-2 text-xs text-gray-600">{name || email}</div>
                   <Link href="/settings" className="block px-3 py-2 hover:bg-gray-50">Preferences</Link>
                   {isAdmin && (
-                    <Link href="/admin" className="block px-3 py-2 hover:bg-gray-50">User Administration</Link>
+                    <Link href="/admin/users" className="block px-3 py-2 hover:bg-gray-50">User Administration</Link>
                   )}
                   <button onClick={onLogout} className="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
                 </div>

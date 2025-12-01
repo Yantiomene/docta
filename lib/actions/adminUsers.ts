@@ -1,22 +1,27 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 
 const VALID_ROLES = new Set(["admin", "medecin", "infirmiere", "patient"]);
 
 export async function updateUserRoleAction(formData: FormData) {
   const supabase = getServerSupabase();
+  const admin = getServiceSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const currentUser = auth?.user;
   if (!currentUser) redirect("/auth/login");
 
-  const { data: me } = await supabase
+  // Check role via service client to avoid RLS recursion; fallback to metadata
+  const { data: me, error: meErr } = await admin
     .from("profiles")
     .select("role")
     .eq("id", currentUser.id)
     .maybeSingle();
-  if (me?.role !== "admin") redirect("/post-login");
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const myRole = me?.role ?? (currentUser.user_metadata?.role as string | undefined) ?? null;
+  const isAdmin = myRole === "admin" || (!!ADMIN_EMAIL && currentUser.email === ADMIN_EMAIL);
+  if (!isAdmin) redirect("/post-login");
 
   const targetUserId = (formData.get("user_id") || "").toString();
   const newRole = (formData.get("role") || "").toString();
@@ -25,7 +30,8 @@ export async function updateUserRoleAction(formData: FormData) {
     redirect(`/admin/users?error=${encodeURIComponent("Invalid payload")}`);
   }
 
-  const { error } = await supabase
+  // Perform update with service client to ensure admin privileges
+  const { error } = await admin
     .from("profiles")
     .update({ role: newRole })
     .eq("id", targetUserId);
@@ -39,16 +45,20 @@ export async function updateUserRoleAction(formData: FormData) {
 
 export async function setActiveAction(formData: FormData) {
   const supabase = getServerSupabase();
+  const admin = getServiceSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const currentUser = auth?.user;
   if (!currentUser) redirect("/auth/login");
 
-  const { data: me } = await supabase
+  const { data: me, error: meErr } = await admin
     .from("profiles")
     .select("role")
     .eq("id", currentUser.id)
     .maybeSingle();
-  if (me?.role !== "admin") redirect("/post-login");
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const myRole = me?.role ?? (currentUser.user_metadata?.role as string | undefined) ?? null;
+  const isAdmin = myRole === "admin" || (!!ADMIN_EMAIL && currentUser.email === ADMIN_EMAIL);
+  if (!isAdmin) redirect("/post-login");
 
   const targetUserId = (formData.get("user_id") || "").toString();
   const activeRaw = (formData.get("active") || "").toString();
@@ -57,7 +67,7 @@ export async function setActiveAction(formData: FormData) {
     redirect(`/admin/users?error=${encodeURIComponent("Invalid payload")}`);
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("profiles")
     .update({ actif: active })
     .eq("id", targetUserId);

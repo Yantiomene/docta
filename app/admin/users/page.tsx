@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 import { updateUserRoleAction, setActiveAction } from "@/lib/actions/adminUsers";
 import Select from "@/components/ui/select";
 import Button from "@/components/ui/button";
@@ -10,21 +10,30 @@ type SearchParams = { error?: string; success?: string; q?: string; role?: strin
 
 export default async function AdminUsersPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = getServerSupabase();
+  const admin = getServiceSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth?.user;
   if (!user) redirect("/auth/login");
 
-  const { data: me } = await supabase
+  // Robust role check: prefer reading via service client (avoids RLS recursion),
+  // then fall back to user metadata and admin email override if needed.
+  let myRole: string | null = null;
+  const { data: me, error: meErr } = await admin
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
-  if (me?.role !== "admin") redirect("/post-login");
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  // choose role from service read if present, else fallback to metadata
+  myRole = me?.role ?? (user.user_metadata?.role as string | undefined) ?? null;
+  const isAdmin = myRole === "admin" || (!!ADMIN_EMAIL && user.email === ADMIN_EMAIL);
+  if (!isAdmin) redirect("/post-login");
 
   const q = (searchParams?.q || "").trim();
   const filterRole = (searchParams?.role || "").trim();
 
-  let query = supabase
+  // Use service client for admin listing operations to avoid RLS limitations
+  let query = admin
     .from("profiles")
     .select("id, email, nom, prenom, role, telephone, actif, created_at")
     .order("created_at", { ascending: false });

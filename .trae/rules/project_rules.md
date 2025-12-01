@@ -20,6 +20,12 @@ The project uses the following technologies. Do not introduce new libraries or f
 - API Communication: Use Next.js Server Actions for mutations (creating polls, voting). Fetch data in Server Components using the Supabase client.
 - Utility Libraries: A library like qrcode.react for generating QR codes.
 
+### Library Adoption Policy
+- I may suggest additional libraries when they provide clear value (e.g., improved DX, performance, security, or reduced complexity).
+- I will not install or integrate any new library without your explicit approval.
+- Each suggestion will include: rationale, scope of usage, impact on bundle size/perf, and any maintenance/security considerations.
+- After your validation, I will proceed with minimal, targeted integration consistent with the existing stack.
+
 
 ## Architecture & Code Style
 
