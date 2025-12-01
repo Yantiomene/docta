@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { getServerSupabase } from "@/lib/supabaseServer";
-import { updateUserRoleAction } from "@/lib/actions/adminUsers";
+import { updateUserRoleAction, setActiveAction } from "@/lib/actions/adminUsers";
 import Select from "@/components/ui/select";
 import Button from "@/components/ui/button";
+import Input from "@/components/ui/input";
+import ConfirmRoleChange from "@/components/features/admin/ConfirmRoleChange";
 
-type SearchParams = { error?: string; success?: string };
+type SearchParams = { error?: string; success?: string; q?: string; role?: string };
 
 export default async function AdminUsersPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = getServerSupabase();
@@ -19,10 +21,23 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
     .maybeSingle();
   if (me?.role !== "admin") redirect("/post-login");
 
-  const { data: profiles, error } = await supabase
+  const q = (searchParams?.q || "").trim();
+  const filterRole = (searchParams?.role || "").trim();
+
+  let query = supabase
     .from("profiles")
-    .select("id, email, nom, prenom, role, telephone, actif")
+    .select("id, email, nom, prenom, role, telephone, actif, created_at")
     .order("created_at", { ascending: false });
+
+  if (filterRole) {
+    query = query.eq("role", filterRole);
+  }
+  if (q) {
+    // Search on nom/prenom/email
+    query = query.or(`nom.ilike.%${q}%,prenom.ilike.%${q}%,email.ilike.%${q}%`);
+  }
+
+  const { data: profiles, error } = await query;
 
   if (error) {
     redirect(`/admin/users?error=${encodeURIComponent(error.message)}`);
@@ -43,7 +58,26 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           {message.text}
         </div>
       )}
-      <div className="overflow-x-auto rounded-lg border">
+      <form method="get" className="flex items-end gap-2">
+        <div>
+          <label className="text-sm font-medium">Search</label>
+          <Input name="q" defaultValue={q} placeholder="name or email" />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Role</label>
+          <Select name="role" defaultValue={filterRole} className="w-40">
+            <option value="">All</option>
+            <option value="patient">Patient</option>
+            <option value="medecin">Médecin</option>
+            <option value="infirmiere">Infirmière</option>
+            <option value="admin">Admin</option>
+          </Select>
+        </div>
+        <Button type="submit">Apply</Button>
+        <Button type="button" variant="outline" onClick={() => { window.location.href = "/admin/users"; }}>Clear</Button>
+      </form>
+
+      <div className="overflow-x-auto rounded-lg border mt-4">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -62,20 +96,15 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
                 <td className="px-3 py-2">{p.email}</td>
                 <td className="px-3 py-2">{p.telephone ?? "—"}</td>
                 <td className="px-3 py-2">
-                  <form action={updateUserRoleAction} className="flex items-center gap-2">
-                    <input type="hidden" name="user_id" value={p.id} />
-                    <Select name="role" defaultValue={p.role} className="w-40">
-                      <option value="patient">Patient</option>
-                      <option value="medecin">Médecin</option>
-                      <option value="infirmiere">Infirmière</option>
-                      <option value="admin">Admin</option>
-                    </Select>
-                    <Button type="submit" variant="outline">Save</Button>
-                  </form>
+                  <ConfirmRoleChange userId={p.id} currentRole={p.role} />
                 </td>
                 <td className="px-3 py-2">{p.actif ? "Yes" : "No"}</td>
                 <td className="px-3 py-2">
-                  {/* Additional actions like deactivate/reactivate can be added later */}
+                  <form action={setActiveAction} className="inline-flex items-center gap-2">
+                    <input type="hidden" name="user_id" value={p.id} />
+                    <input type="hidden" name="active" value={(!p.actif).toString()} />
+                    <Button type="submit" variant="outline">{p.actif ? "Deactivate" : "Activate"}</Button>
+                  </form>
                 </td>
               </tr>
             ))}
@@ -85,4 +114,3 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
     </div>
   );
 }
-
