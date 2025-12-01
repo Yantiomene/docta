@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabaseServer";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import type { CountryCode } from "libphonenumber-js";
 
 export async function upsertProfileAction(formData: FormData) {
   const supabase = getServerSupabase();
@@ -16,7 +17,7 @@ export async function upsertProfileAction(formData: FormData) {
 
   const nom = (formData.get("nom") || "").toString().trim();
   const prenom = (formData.get("prenom") || "").toString().trim();
-  const countryCodeRaw = (formData.get("country_code") || "").toString().trim();
+  const countryIsoRaw = (formData.get("country_code") || "").toString().trim();
   const phoneRaw = (formData.get("phone_number") || "").toString().trim();
   const avatar_url = (formData.get("avatar_url") || "").toString().trim() || null;
 
@@ -25,25 +26,26 @@ export async function upsertProfileAction(formData: FormData) {
     redirect("/profile/setup?error=missing_fields");
   }
 
-  // Require phone and validate E.164 format
-  const ccDigits = countryCodeRaw.replace(/[^0-9]/g, "");
-  const phoneDigits = phoneRaw.replace(/[^0-9]/g, "");
-  if (!ccDigits || !phoneDigits) {
+  // Require phone and validate using libphonenumber-js with defaultCountry
+  if (!countryIsoRaw || !phoneRaw) {
     redirect("/profile/setup?error=missing_phone");
   }
-  const constructed = `+${ccDigits}${phoneDigits}`;
+  const defaultCountry = countryIsoRaw as CountryCode;
+  const constructed = phoneRaw;
   let telephone = constructed;
   try {
+    const phone = parsePhoneNumberFromString(constructed, { defaultCountry });
+    if (!phone || !phone.isValid()) {
+      redirect("/profile/setup?error=invalid_phone");
+    }
+    telephone = phone.format("E.164"); // normalized E.164
+  } catch {
+    // Fallback: support already-E.164 numbers without defaultCountry
     const phone = parsePhoneNumberFromString(constructed);
     if (!phone || !phone.isValid()) {
       redirect("/profile/setup?error=invalid_phone");
     }
-    telephone = phone.number; // normalized E.164
-  } catch {
-    const e164 = /^\+[1-9]\d{6,14}$/;
-    if (!e164.test(constructed)) {
-      redirect("/profile/setup?error=invalid_phone");
-    }
+    telephone = phone.format("E.164");
   }
 
   const payload = {

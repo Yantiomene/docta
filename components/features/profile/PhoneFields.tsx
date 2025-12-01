@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import Select from "@/components/ui/select";
 import Input from "@/components/ui/input";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
+import type { CountryCode } from "libphonenumber-js";
 
 type PhoneFieldsProps = {
-  initialCountryCode?: string;
+  initialCountryIso?: CountryCode;
   initialPhoneNumber?: string;
   serverError?: string;
 };
 
 export default function PhoneFields({
-  initialCountryCode = "33",
+  initialCountryIso = "FR",
   initialPhoneNumber = "",
   serverError,
 }: PhoneFieldsProps) {
-  const [countryCode, setCountryCode] = useState(initialCountryCode);
+  const [countryIso, setCountryIso] = useState<CountryCode>(initialCountryIso);
   const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber);
   const [error, setError] = useState<string | undefined>(serverError);
 
@@ -25,20 +26,14 @@ export default function PhoneFields({
   }, [serverError]);
 
   const validate = () => {
-    const cc = countryCode?.trim();
+    const cc = countryIso?.toString().trim();
     const pn = phoneNumber?.trim();
     if (!cc || !pn) {
       setError("Le téléphone est requis.");
       return false;
     }
-    // Disallow local numbers starting with 0 for E.164
-    if (pn.startsWith("0")) {
-      setError("Numéro invalide. Utilisez le format E.164 (ex: +33612345678).");
-      return false;
-    }
-    const full = `+${cc}${pn}`;
     try {
-      const phone = parsePhoneNumberFromString(full);
+      const phone = parsePhoneNumberFromString(pn, { defaultCountry: cc as CountryCode });
       if (!phone || !phone.isValid()) {
         setError("Numéro invalide. Utilisez le format E.164 (ex: +33612345678).");
         return false;
@@ -58,38 +53,37 @@ export default function PhoneFields({
         <Select
           name="country_code"
           required
-          value={countryCode}
+          value={countryIso}
           onChange={(e) => {
-            setCountryCode(e.target.value);
-            // Re-validate on change
+            setCountryIso(e.target.value as CountryCode);
             validate();
           }}
-          className="w-[160px]"
+          className="w-[200px]"
         >
           <option value="">Sélectionner</option>
-          <option value="33">+33 (France)</option>
-          <option value="32">+32 (Belgique)</option>
-          <option value="41">+41 (Suisse)</option>
-          <option value="352">+352 (Luxembourg)</option>
-          <option value="377">+377 (Monaco)</option>
-          <option value="49">+49 (Allemagne)</option>
-          <option value="39">+39 (Italie)</option>
-          <option value="34">+34 (Espagne)</option>
-          <option value="44">+44 (Royaume-Uni)</option>
-          <option value="1">+1 (USA/Canada)</option>
-          <option value="213">+213 (Algérie)</option>
-          <option value="212">+212 (Maroc)</option>
-          <option value="216">+216 (Tunisie)</option>
-          <option value="221">+221 (Sénégal)</option>
-          <option value="225">+225 (Côte d’Ivoire)</option>
-          <option value="237">+237 (Cameroun)</option>
-          <option value="234">+234 (Nigeria)</option>
+          <option value="FR">+33 (France)</option>
+          <option value="BE">+32 (Belgique)</option>
+          <option value="CH">+41 (Suisse)</option>
+          <option value="LU">+352 (Luxembourg)</option>
+          <option value="MC">+377 (Monaco)</option>
+          <option value="DE">+49 (Allemagne)</option>
+          <option value="IT">+39 (Italie)</option>
+          <option value="ES">+34 (Espagne)</option>
+          <option value="GB">+44 (Royaume-Uni)</option>
+          <option value="US">+1 (USA)</option>
+          <option value="CA">+1 (Canada)</option>
+          <option value="DZ">+213 (Algérie)</option>
+          <option value="MA">+212 (Maroc)</option>
+          <option value="TN">+216 (Tunisie)</option>
+          <option value="SN">+221 (Sénégal)</option>
+          <option value="CI">+225 (Côte d’Ivoire)</option>
+          <option value="CM">+237 (Cameroun)</option>
+          <option value="NG">+234 (Nigeria)</option>
         </Select>
         <Input
           name="phone_number"
-          placeholder="Numéro sans 0 initial"
-          inputMode="numeric"
-          pattern="[0-9]+"
+          placeholder="Votre numéro (ex: 06 12 34 56 78)"
+          inputMode="tel"
           required
           value={phoneNumber}
           onChange={(e) => {
@@ -101,7 +95,7 @@ export default function PhoneFields({
         />
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
-      <p className="text-xs text-gray-500">Ex: +33 612345678 ⇒ code 33, numéro 612345678</p>
+      <p className="text-xs text-gray-500">Saisissez le numéro national pour le pays sélectionné. Il sera normalisé au format E.164.</p>
     </div>
   );
 }
