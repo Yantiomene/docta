@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 let client: SupabaseClient | null = null;
 
@@ -6,10 +7,25 @@ export function getSupabaseClient(): SupabaseClient {
   if (client) return client;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  client = createClient(url, anon, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
+  client = createBrowserClient(url, anon, {
+    cookies: {
+      get(name: string) {
+        const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return match ? decodeURIComponent(match[1]) : undefined;
+      },
+      set(name: string, value: string, options: any = {}) {
+        const opts = { path: "/", ...options };
+        let cookie = `${name}=${encodeURIComponent(value)}; path=${opts.path}`;
+        if (opts.maxAge) cookie += `; max-age=${opts.maxAge}`;
+        if (opts.domain) cookie += `; domain=${opts.domain}`;
+        if (opts.sameSite) cookie += `; samesite=${opts.sameSite}`;
+        if (opts.secure) cookie += `; secure`;
+        document.cookie = cookie;
+      },
+      remove(name: string, options: any = {}) {
+        const opts = { path: "/", ...options };
+        document.cookie = `${name}=; path=${opts.path}; max-age=0`;
+      },
     },
   });
   return client;

@@ -15,14 +15,26 @@ export async function upsertProfileAction(formData: FormData) {
 
   const nom = (formData.get("nom") || "").toString().trim();
   const prenom = (formData.get("prenom") || "").toString().trim();
-  const telephone = (formData.get("telephone") || "").toString().trim() || null;
-  const specialite = (formData.get("specialite") || "").toString().trim() || null;
-  const service = (formData.get("service") || "").toString().trim() || null;
+  const countryCodeRaw = (formData.get("country_code") || "").toString().trim();
+  const phoneRaw = (formData.get("phone_number") || "").toString().trim();
   const avatar_url = (formData.get("avatar_url") || "").toString().trim() || null;
 
   if (!nom || !prenom) {
     // Missing required fields; send back to setup
     redirect("/profile/setup?error=missing_fields");
+  }
+
+  // Build and validate E.164 phone number if provided
+  let telephone: string | null = null;
+  if (countryCodeRaw || phoneRaw) {
+    const ccDigits = countryCodeRaw.replace(/[^0-9]/g, "");
+    const phoneDigits = phoneRaw.replace(/[^0-9]/g, "");
+    const constructed = `+${ccDigits}${phoneDigits}`;
+    const e164 = /^\+[1-9]\d{6,14}$/;
+    if (!ccDigits || !phoneDigits || !e164.test(constructed)) {
+      redirect("/profile/setup?error=invalid_phone");
+    }
+    telephone = constructed;
   }
 
   const payload = {
@@ -32,8 +44,6 @@ export async function upsertProfileAction(formData: FormData) {
     nom,
     prenom,
     telephone,
-    specialite,
-    service,
     avatar_url,
   } as const;
 
