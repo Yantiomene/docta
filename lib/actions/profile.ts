@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabaseServer";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 export async function upsertProfileAction(formData: FormData) {
   const supabase = getServerSupabase();
@@ -31,11 +32,19 @@ export async function upsertProfileAction(formData: FormData) {
     redirect("/profile/setup?error=missing_phone");
   }
   const constructed = `+${ccDigits}${phoneDigits}`;
-  const e164 = /^\+[1-9]\d{6,14}$/;
-  if (!e164.test(constructed)) {
-    redirect("/profile/setup?error=invalid_phone");
+  let telephone = constructed;
+  try {
+    const phone = parsePhoneNumberFromString(constructed);
+    if (!phone || !phone.isValid()) {
+      redirect("/profile/setup?error=invalid_phone");
+    }
+    telephone = phone.number; // normalized E.164
+  } catch {
+    const e164 = /^\+[1-9]\d{6,14}$/;
+    if (!e164.test(constructed)) {
+      redirect("/profile/setup?error=invalid_phone");
+    }
   }
-  const telephone = constructed;
 
   const payload = {
     id: user.id,

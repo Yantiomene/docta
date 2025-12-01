@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Select from "@/components/ui/select";
 import Input from "@/components/ui/input";
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 
 type PhoneFieldsProps = {
   initialCountryCode?: string;
@@ -36,8 +37,13 @@ export default function PhoneFields({
       return false;
     }
     const full = `+${cc}${pn}`;
-    const e164 = /^\+[1-9]\d{6,14}$/;
-    if (!e164.test(full)) {
+    try {
+      const phone = parsePhoneNumberFromString(full);
+      if (!phone || !phone.isValid()) {
+        setError("Numéro invalide. Utilisez le format E.164 (ex: +33612345678).");
+        return false;
+      }
+    } catch {
       setError("Numéro invalide. Utilisez le format E.164 (ex: +33612345678).");
       return false;
     }
@@ -99,4 +105,3 @@ export default function PhoneFields({
     </div>
   );
 }
-
