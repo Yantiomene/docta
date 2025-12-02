@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { PatientSchema } from "@/lib/schemas";
-import { getServiceSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase } from "@/lib/supabaseServer";
 
 export async function createPatientAction(formData: FormData) {
   // Extract and sanitize fields
@@ -26,7 +26,7 @@ export async function createPatientAction(formData: FormData) {
     redirect(`/medecin/patients/create?error=${encodeURIComponent(msg)}`);
   }
 
-  const supabase = getServiceSupabase();
+  const supabase = getServerSupabase();
   const payload = {
     first_name: firstName,
     last_name: lastName,
