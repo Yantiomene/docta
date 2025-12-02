@@ -33,7 +33,7 @@ export default async function ProfileSetupPage({ searchParams }: { searchParams?
             <label className="text-sm font-medium">Prénom</label>
             <Input name="prenom" required />
           </div>
-          <PhoneFields initialCountryCode="33" serverError={phoneError} />
+          <PhoneFields initialCountryIso="FR" serverError={phoneError} />
           <div>
             <label className="text-sm font-medium">Avatar URL (optionnel)</label>
             <Input name="avatar_url" />
