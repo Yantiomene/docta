@@ -23,6 +23,17 @@ Docta est une application de gestion sanitaire avec des tableaux de bord orient�
   - Vérifiez `vercel.json` et les jobs cron
   - Déployez en Production; les jobs cron ne s’exécutent pas sur les previews
 
+### Variables d’environnement sur Vercel
+- Obligatoires (Production):
+  - `NEXT_PUBLIC_SUPABASE_URL` (Dashboard Supabase → Settings → API → Project URL)
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Anon Key)
+  - `SUPABASE_SECRET_KEY` (Service Role Key – ne pas exposer côté client)
+  - `CRON_SECRET` (pour autoriser les endpoints cron)
+- Optionnelles:
+  - `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ADMIN_EMAIL`, `NEXT_PUBLIC_ENV`
+
+Après configuration, relancez un déploiement en Production afin d’enregistrer les jobs cron et éviter les erreurs de prerender liées à Supabase.
+
 ## Démarrage & Exemple d’usage
 1) Inscription: ouvrez `/auth/register`, saisissez email + mot de passe + confirmation
    - Si l’email existe déjà, vous serez redirigé vers `/auth/login`
@@ -38,7 +49,7 @@ Créez un fichier `.env.local` (exemple dans `.env.local.example`).
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=your-service-role-key
 CRON_SECRET=change-me
 NEXT_PUBLIC_ADMIN_EMAIL=admin@gmail.com
 NODE_ENV=development
