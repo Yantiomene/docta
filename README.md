@@ -73,6 +73,7 @@ lib/ ... schémas, utils, supabase, rbac, types
 Le fichier `vercel.json` configure des tâches cron. Plan Hobby actuel:
 - `/api/notifications/daily` chaque jour à 08:00
 - `/api/planning/shift-reminders` chaque jour à 07:00
+ - `/api/messages/cleanup` chaque jour à 03:00
 
 Assurez-vous que chaque route existe et vérifie `Authorization: Bearer <CRON_SECRET>`.
 
@@ -83,10 +84,12 @@ Assurez-vous que chaque route existe et vérifie `Authorization: Bearer <CRON_SE
 
 ```json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "crons": [
     { "path": "/api/notifications/daily", "schedule": "0 8 * * *" },
-    { "path": "/api/planning/shift-reminders", "schedule": "0 7 * * *" }
+    { "path": "/api/planning/shift-reminders", "schedule": "0 7 * * *" },
+    { "path": "/api/messages/cleanup", "schedule": "0 3 * * *" }
   ]
 }
 ```

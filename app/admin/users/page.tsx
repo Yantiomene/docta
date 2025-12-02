@@ -87,23 +87,23 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
       </form>
 
       <div className="overflow-x-auto rounded-lg border mt-4">
-        <table className="min-w-full text-sm">
+        <table className="min-w-full text-sm table-fixed">
           <thead className="bg-muted">
             <tr>
-              <th className="text-left px-3 py-2">Name</th>
-              <th className="text-left px-3 py-2">Email</th>
-              <th className="text-left px-3 py-2">Phone</th>
-              <th className="text-left px-3 py-2">Role</th>
-              <th className="text-left px-3 py-2">Active</th>
-              <th className="text-left px-3 py-2">Actions</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Name</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Email</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Phone</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Role</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Active</th>
+              <th className="text-left px-3 py-2 whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
             {(profiles ?? []).map((p) => (
               <tr key={p.id} className="border-t">
-                <td className="px-3 py-2">{p.nom} {p.prenom}</td>
-                <td className="px-3 py-2">{p.email}</td>
-                <td className="px-3 py-2">{p.telephone ?? "—"}</td>
+                <td className="px-3 py-2 break-words max-w-[12rem] truncate sm:whitespace-normal sm:overflow-visible sm:text-clip sm:max-w-none">{p.nom} {p.prenom}</td>
+                <td className="px-3 py-2 break-words max-w-[18rem] truncate sm:whitespace-normal sm:overflow-visible sm:text-clip sm:max-w-none">{p.email}</td>
+                <td className="px-3 py-2 break-words max-w-[10rem] truncate sm:whitespace-normal sm:overflow-visible sm:text-clip sm:max-w-none">{p.telephone ?? "—"}</td>
                 <td className="px-3 py-2">
                   <ConfirmRoleChange userId={p.id} currentRole={p.role} />
                 </td>
