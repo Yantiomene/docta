@@ -13,9 +13,13 @@ export async function createPatientAction(formData: FormData) {
   const dob = (formData.get("dob") || "").toString().trim() || undefined; // ISO date string
   const genderRaw = (formData.get("gender") || "").toString().trim();
   const gender = genderRaw ? (genderRaw as "male" | "female" | "other") : undefined;
+  const bloodTypeRaw = (formData.get("bloodType") || "").toString().trim();
+  const bloodType = bloodTypeRaw
+    ? (bloodTypeRaw as "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-")
+    : undefined;
 
   // Validate with Zod schema
-  const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender });
+  const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender, bloodType });
   if (!parsed.success) {
     // Encode first issue message and redirect back with error
     const msg = parsed.error.issues?.[0]?.message || "Invalid fields";
@@ -30,6 +34,7 @@ export async function createPatientAction(formData: FormData) {
     phone: phone ?? null,
     dob: dob ?? null,
     gender: gender ?? null,
+    blood_type: bloodType ?? null,
     created_at: new Date().toISOString(),
   } as const;
 

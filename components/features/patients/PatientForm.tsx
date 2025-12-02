@@ -1,37 +1,55 @@
-"use client";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PatientSchema } from "@/lib/schemas";
+import { createPatientAction } from "@/lib/actions/patients";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-
-type FormData = z.infer<typeof PatientSchema>;
+import Select from "@/components/ui/select";
 
 export default function PatientForm() {
-  const form = useForm<FormData>({ resolver: zodResolver(PatientSchema), defaultValues: { firstName: "", lastName: "" } });
-
-  function onSubmit(values: FormData) {
-    // placeholder submit; wire to API later
-    console.log("create patient", values);
-  }
-
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+    <form action={createPatientAction} className="space-y-3">
       <div>
         <label className="text-sm">First name</label>
-        <Input {...form.register("firstName")} />
+        <Input name="firstName" required />
       </div>
       <div>
         <label className="text-sm">Last name</label>
-        <Input {...form.register("lastName")} />
+        <Input name="lastName" required />
       </div>
       <div>
-        <label className="text-sm">Email</label>
-        <Input type="email" {...form.register("email")} />
+        <label className="text-sm">Email (optional)</label>
+        <Input type="email" name="email" />
+      </div>
+      <div>
+        <label className="text-sm">Phone (optional)</label>
+        <Input name="phone" />
+      </div>
+      <div>
+        <label className="text-sm">Date of birth (optional)</label>
+        <Input type="date" name="dob" />
+      </div>
+      <div>
+        <label className="text-sm">Gender</label>
+        <Select name="gender" required className="w-full">
+          <option value="">Select</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </Select>
+      </div>
+      <div>
+        <label className="text-sm">Blood Type (optional)</label>
+        <Select name="bloodType" className="w-full">
+          <option value="">Select</option>
+          <option value="A+">A+</option>
+          <option value="A-">A-</option>
+          <option value="B+">B+</option>
+          <option value="B-">B-</option>
+          <option value="AB+">AB+</option>
+          <option value="AB-">AB-</option>
+          <option value="O+">O+</option>
+          <option value="O-">O-</option>
+        </Select>
       </div>
       <Button type="submit">Save Patient</Button>
     </form>
   );
 }
-

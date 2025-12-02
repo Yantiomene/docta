@@ -7,7 +7,8 @@ export type Patient = {
   email?: string;
   phone?: string;
   dob?: string; // ISO date
-  gender?: "male" | "female" | "other";
+  gender: "male" | "female" | "other";
+  bloodType?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
   createdAt: string; // ISO date
   updatedAt?: string; // ISO date
 };
@@ -81,4 +82,3 @@ export type Shift = {
   startsAt: string; // ISO date-time
   endsAt: string; // ISO date-time
 };
-

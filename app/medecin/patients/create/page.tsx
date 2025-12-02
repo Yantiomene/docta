@@ -46,12 +46,26 @@ export default async function CreatePatientPage({ searchParams }: { searchParams
             <Input type="date" name="dob" />
           </div>
           <div>
-            <label className="text-sm font-medium">Genre (optionnel)</label>
-            <Select name="gender" className="w-full">
+            <label className="text-sm font-medium">Genre</label>
+            <Select name="gender" required className="w-full">
               <option value="">Sélectionner</option>
               <option value="male">Homme</option>
               <option value="female">Femme</option>
               <option value="other">Autre</option>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Groupe sanguin (optionnel)</label>
+            <Select name="bloodType" className="w-full">
+              <option value="">Sélectionner</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
             </Select>
           </div>
           <Button type="submit" className="w-full">Créer</Button>
@@ -60,4 +74,3 @@ export default async function CreatePatientPage({ searchParams }: { searchParams
     </div>
   );
 }
-

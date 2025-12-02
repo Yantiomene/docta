@@ -8,7 +8,10 @@ export const PatientSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   dob: z.string().optional(),
-  gender: z.enum(["male", "female", "other"]).optional(),
+  gender: z.enum(["male", "female", "other"]),
+  bloodType: z
+    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+    .optional(),
 });
 
 export const MedicalRecordSchema = z.object({
@@ -66,4 +69,3 @@ export const ShiftSchema = z.object({
   startsAt: z.string().min(1),
   endsAt: z.string().min(1),
 });
-
