@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cleanupOldMessages } from "@/lib/cron/messages";
 
 function verifyCron(req: NextRequest) {
   const secret = process.env.CRON_SECRET || "change-me";
@@ -13,5 +14,6 @@ export async function GET(req: NextRequest) {
   }
 
   // TODO: send shift reminders
-  return NextResponse.json({ job: "planning/shift-reminders", ranAt: new Date().toISOString() });
+  const cleanup = await cleanupOldMessages();
+  return NextResponse.json({ job: "planning/shift-reminders", ranAt: new Date().toISOString(), cleanup });
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cleanupOldMessages } from "@/lib/cron/messages";
 
 function verifyCron(req: NextRequest) {
   const secret = process.env.CRON_SECRET || "change-me";
@@ -12,6 +13,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // TODO: cleanup old messages
-  return NextResponse.json({ job: "messages/cleanup", ranAt: new Date().toISOString() });
+  const result = await cleanupOldMessages();
+  return NextResponse.json({ job: "messages/cleanup", ranAt: new Date().toISOString(), result });
 }
