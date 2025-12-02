@@ -25,20 +25,20 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-background border-b border-black/10 dark:border-white/15">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between text-foreground">
+    <header className="bg-primary">
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-14 flex items-center justify-between text-white flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Link href="/" className="font-semibold tracking-tight">Docta</Link>
-          <span className="text-sm text-foreground/60">Healthcare Dashboard</span>
+          <span className="hidden sm:inline text-sm text-white/80">Healthcare Dashboard</span>
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/" className="hover:underline">Home</Link>
+        <div className="flex items-center gap-3 sm:gap-4 text-sm">
+          <Link href="/" className="hover:text-white/80">Home</Link>
           {!user ? (
-            <Link href="/auth/login" className="hover:underline">Login</Link>
+            <Link href="/auth/login" className="hover:text-white/80">Login</Link>
           ) : (
             <div className="relative">
               <button
-                className="size-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden"
+                className="size-8 rounded-full bg-secondary text-white flex items-center justify-center overflow-hidden"
                 onClick={() => setOpen((v) => !v)}
                 aria-label="User menu"
               >
@@ -50,13 +50,13 @@ export default function Navbar() {
                 )}
               </button>
               {open && (
-                <div className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow">
-                  <div className="px-3 py-2 text-xs text-gray-600">{name || email}</div>
-                  <Link href="/settings" className="block px-3 py-2 hover:bg-gray-50">Preferences</Link>
+                <div className="absolute right-0 mt-2 w-44 rounded-md border border-muted bg-white shadow text-slate">
+                  <div className="px-3 py-2 text-xs text-slate/80">{name || email}</div>
+                  <Link href="/settings" className="block px-3 py-2 hover:bg-muted">Preferences</Link>
                   {isAdmin && (
-                    <Link href="/admin/users" className="block px-3 py-2 hover:bg-gray-50">User Administration</Link>
+                    <Link href="/admin/users" className="block px-3 py-2 hover:bg-muted">User Administration</Link>
                   )}
-                  <button onClick={onLogout} className="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
+                  <button onClick={onLogout} className="w-full text-left px-3 py-2 hover:bg-muted">Logout</button>
                 </div>
               )}
             </div>

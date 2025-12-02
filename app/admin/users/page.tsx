@@ -67,14 +67,14 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
           {message.text}
         </div>
       )}
-      <form method="get" className="flex items-end gap-2">
-        <div>
+      <form method="get" className="grid grid-cols-1 sm:grid-cols-[1fr_12rem_auto_auto] items-end gap-3">
+        <div className="sm:col-span-1">
           <label className="text-sm font-medium">Search</label>
           <Input name="q" defaultValue={q} placeholder="name or email" />
         </div>
-        <div>
+        <div className="sm:col-span-1">
           <label className="text-sm font-medium">Role</label>
-          <Select name="role" defaultValue={filterRole} className="w-40">
+          <Select name="role" defaultValue={filterRole} className="w-full sm:w-40">
             <option value="">All</option>
             <option value="patient">Patient</option>
             <option value="medecin">Médecin</option>
@@ -82,13 +82,13 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
             <option value="admin">Admin</option>
           </Select>
         </div>
-        <Button type="submit">Apply</Button>
-        <a href="/admin/users" className="inline-flex h-9 items-center rounded-md border border-gray-300 px-3 text-sm hover:bg-gray-50">Clear</a>
+        <Button type="submit" className="sm:col-span-1">Apply</Button>
+        <a href="/admin/users" className="inline-flex h-9 items-center rounded-md border border-muted px-3 text-sm hover:bg-muted sm:col-span-1">Clear</a>
       </form>
 
       <div className="overflow-x-auto rounded-lg border mt-4">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted">
             <tr>
               <th className="text-left px-3 py-2">Name</th>
               <th className="text-left px-3 py-2">Email</th>
@@ -111,7 +111,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams?: 
                 <td className="px-3 py-2">
                   <form action={setActiveAction} className="inline-flex items-center gap-2">
                     <input type="hidden" name="user_id" value={p.id} />
-                    <input type="hidden" name="active" value={(!p.actif).toString()} />
+                    <input type="hidden" name="active" value={(!!(!p.actif)).toString()} />
                     <Button type="submit" variant="outline">{p.actif ? "Deactivate" : "Activate"}</Button>
                   </form>
                 </td>
