@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-64 border-r p-4 space-y-3">
+    <div className="min-h-screen flex flex-col sm:flex-row w-full">
+      <aside className="w-full sm:w-64 sm:border-r border-b sm:border-b-0 p-4 space-y-3">
         <h2 className="text-lg font-semibold">Admin</h2>
         <nav className="space-y-2">
           <Link href="/admin" className="block hover:underline">Dashboard</Link>
@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/planning" className="block hover:underline">Planning</Link>
         </nav>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 p-4 sm:p-6 w-full">{children}</main>
     </div>
   );
 }

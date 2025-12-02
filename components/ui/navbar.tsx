@@ -25,8 +25,8 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-primary">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-14 flex items-center justify-between text-white flex-wrap gap-2">
+    <header className="bg-primary w-full">
+      <nav className="w-full px-4 sm:px-6 lg:px-8 min-h-14 flex items-center justify-between text-white flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Link href="/" className="font-semibold tracking-tight">Docta</Link>
           <span className="hidden sm:inline text-sm text-white/80">Healthcare Dashboard</span>
