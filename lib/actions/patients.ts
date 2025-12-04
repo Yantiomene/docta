@@ -74,7 +74,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
   const role = me?.role || "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/${role}`);
+    redirect(`/admin/patients?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
   }
 
   // Extract fields
