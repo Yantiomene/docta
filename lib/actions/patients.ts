@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { PatientSchema } from "@/lib/schemas";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 
 export async function createPatientAction(formData: FormData) {
   // Extract and sanitize fields
@@ -66,12 +66,13 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
   if (!currentUser) redirect("/auth/login");
 
   // Ensure staff role
-  const { data: me } = await supabase
+  const service = getServiceSupabase();
+  const { data: me } = await service
     .from("profiles")
     .select("role")
     .eq("id", currentUser.id)
     .maybeSingle();
-  const role = me?.role || "patient";
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
     redirect(`/admin/patients?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);

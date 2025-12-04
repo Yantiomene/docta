@@ -27,10 +27,16 @@ export default function PatientForm({ users }: { users: UserOption[] }) {
       <div>
         <label className="text-sm">Rechercher un utilisateur (nom/email)</label>
         <Input
-          name="_search"
+          type="text"
           placeholder="Tapez pour filtrer…"
           value={query}
+          autoComplete="off"
           onChange={(e: any) => setQuery(e.target.value)}
+          onKeyDown={(e: any) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            }
+          }}
         />
         <p className="text-xs text-gray-600 mt-1">{filtered.length} utilisateurs</p>
       </div>
