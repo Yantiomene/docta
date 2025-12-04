@@ -7,6 +7,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
         <h2 className="text-lg font-semibold">Patient</h2>
         <nav className="space-y-2">
           <Link href="/patient" className="block hover:underline">Dashboard</Link>
+          <Link href="/patient/dossier" className="block hover:underline">Mon dossier</Link>
           <Link href="/patient/appointments" className="block hover:underline">Appointments</Link>
           <Link href="/patient/messages" className="block hover:underline">Messages</Link>
           <Link href="/patient/notifications" className="block hover:underline">Notifications</Link>

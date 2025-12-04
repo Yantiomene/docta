@@ -1,30 +1,69 @@
-import { createPatientAction } from "@/lib/actions/patients";
+"use client";
+
+import { useMemo, useState } from "react";
+import { staffCreateOrLinkPatientAction } from "@/lib/actions/patients";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 
-export default function PatientForm() {
+type UserOption = { id: string; email: string | null; nom: string | null; prenom: string | null; role: string | null };
+
+export default function PatientForm({ users }: { users: UserOption[] }) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const prenom = (u.prenom || "").toLowerCase();
+      const nom = (u.nom || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      return prenom.includes(q) || nom.includes(q) || email.includes(q);
+    });
+  }, [users, query]);
+
+  const today = new Date().toISOString().slice(0, 10);
   return (
-    <form action={createPatientAction} className="space-y-3">
+    <form action={staffCreateOrLinkPatientAction} className="space-y-3">
+      <div>
+        <label className="text-sm">Rechercher un utilisateur (nom/email)</label>
+        <Input
+          name="_search"
+          placeholder="Tapez pour filtrer…"
+          value={query}
+          onChange={(e: any) => setQuery(e.target.value)}
+        />
+        <p className="text-xs text-gray-600 mt-1">{filtered.length} utilisateurs</p>
+      </div>
+      <div>
+        <label className="text-sm">Associer à un utilisateur (optionnel)</label>
+        <Select name="user_id" className="w-full">
+          <option value="">Sans compte</option>
+          {filtered.map((u) => (
+            <option key={u.id} value={u.id}>
+              {(u.prenom || "") + " " + (u.nom || "")} — {u.email || "(sans email)"} — {u.role || ""}
+            </option>
+          ))}
+        </Select>
+      </div>
       <div>
         <label className="text-sm">First name</label>
-        <Input name="firstName" required />
+        <Input name="firstName" required minLength={2} />
       </div>
       <div>
         <label className="text-sm">Last name</label>
-        <Input name="lastName" required />
+        <Input name="lastName" required minLength={2} />
       </div>
       <div>
         <label className="text-sm">Email (optional)</label>
-        <Input type="email" name="email" />
+        <Input type="email" name="email" inputMode="email" />
       </div>
       <div>
         <label className="text-sm">Phone (optional)</label>
-        <Input name="phone" />
+        <Input name="phone" pattern="^\\+?[0-9]{7,15}$" title="Format: +XXXXXXXXXXX (7–15 chiffres)" />
       </div>
       <div>
         <label className="text-sm">Date of birth (optional)</label>
-        <Input type="date" name="dob" />
+        <Input type="date" name="dob" max={today} />
       </div>
       <div>
         <label className="text-sm">Gender</label>
