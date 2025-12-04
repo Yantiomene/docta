@@ -56,6 +56,40 @@ NODE_ENV=development
 NEXT_PUBLIC_ENV=local
 ```
 
+## Migrations Supabase (CLI)
+- Installation du CLI:
+  - `brew install supabase/tap/supabase`
+- Connexion:
+  - `supabase login`
+- Lier ce projet au ref Supabase:
+  - `supabase link --project-ref dvzaybtbjdpugwepaiuy`
+- Format des fichiers de migration requis:
+  - `YYYYMMDDHHMMSS_name.sql` (ex.: `20251202090000_create_patients_with_rls.sql`)
+- Appliquer les migrations vers la base distante du projet lié:
+  - `supabase migration up --linked`
+- Si le CLI se plaint du format de nom, renommez vos fichiers sous `supabase/migrations/` avec le timestamp conforme.
+
+### Schéma `public.patients` (nouveau)
+- Table: `public.patients` avec colonnes: `id`, `first_name`, `last_name`, `email`, `phone`, `dob`, `gender`, `blood_type`, `created_at`, `updated_at`, `user_id`, `managed_by_staff`.
+- RLS activée avec politiques:
+  - Staff (`admin`, `medecin`, `infirmiere`): `INSERT`, `SELECT`, `UPDATE` (tous).
+  - Patient: `INSERT`/`SELECT`/`UPDATE` uniquement sur son propre dossier (`user_id = auth.uid()`), et pas d’`UPDATE` si `managed_by_staff = true`.
+  - `DELETE` réservé à `admin`.
+- Index:
+  - `patients_last_name_idx` sur `last_name`.
+  - `patients_user_id_idx` sur `user_id`.
+  - Index uniques partiels: `patients_unique_email` (`email is not null`) et `patients_unique_phone` (`phone is not null`).
+
+### Vérifications après migration
+- Confirmer que les politiques RLS existent et que le patient ne peut pas modifier si `managed_by_staff=true`.
+- Créer un dossier patient avec et sans `user_id` pour valider les règles.
+- Tester l’unicité `email`/`phone` en insérant des doublons non-null (doit échouer).
+
+### Commandes utiles
+- Lister l’état des migrations locales: `supabase migration status`
+- Rejouer vers local (si besoin de test): `supabase migration up` (par défaut local)
+- Appliquer à la prod liée: `supabase migration up --linked`
+
 ## Authentification et RBAC
 - L’attribution de rôle est réservée à l’administrateur (pas de choix de rôle à l’inscription)
 - Le layout est enveloppé par un `AuthProvider` pour exposer l’utilisateur courant

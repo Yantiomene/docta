@@ -7,7 +7,7 @@ alter table public.patients
 create index if not exists patients_user_id_idx on public.patients(user_id);
 
 -- Insert allowed for patient to create their own dossier
-create policy if not exists allow_insert_by_patient_self on public.patients
+create policy allow_insert_by_patient_self on public.patients
 as permissive for insert
 to authenticated
 with check (
@@ -19,19 +19,10 @@ with check (
   and user_id = auth.uid()
 );
 
--- Select broadened: staff can read all, patient can read own dossier
-create policy if not exists allow_select_by_staff_roles on public.patients
-as permissive for select
-to authenticated
-using (
-  exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('admin','medecin','infirmiere')
-  )
-);
+-- Select broadened: patient can read own dossier
+-- NOTE: staff SELECT policy already created in initial migration; do not recreate here
 
-create policy if not exists allow_select_by_patient_self on public.patients
+create policy allow_select_by_patient_self on public.patients
 as permissive for select
 to authenticated
 using (
@@ -44,7 +35,7 @@ using (
 );
 
 -- Update allowed for staff on all rows
-create policy if not exists allow_update_by_staff_roles on public.patients
+create policy allow_update_by_staff_roles on public.patients
 as permissive for update
 to authenticated
 using (
@@ -63,7 +54,7 @@ with check (
 );
 
 -- Update allowed for patient on their own dossier
-create policy if not exists allow_update_by_patient_self on public.patients
+create policy allow_update_by_patient_self on public.patients
 as permissive for update
 to authenticated
 using (
@@ -84,7 +75,7 @@ with check (
 );
 
 -- Delete allowed for staff roles (adjust to admin-only if desired)
-create policy if not exists allow_delete_by_staff_roles on public.patients
+create policy allow_delete_by_staff_roles on public.patients
 as permissive for delete
 to authenticated
 using (
@@ -94,4 +85,3 @@ using (
       and p.role in ('admin','medecin','infirmiere')
   )
 );
-
