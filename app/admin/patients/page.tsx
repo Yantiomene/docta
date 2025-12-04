@@ -1,6 +1,7 @@
 import PatientForm from "@/components/features/patients/PatientForm";
 import PatientList from "@/components/features/patients/PatientList";
-import { getServerSupabase } from "@/lib/supabaseServer";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+import { redirect } from "next/navigation";
 
 export default async function AdminPatientsPage({
   searchParams,
@@ -17,6 +18,20 @@ export default async function AdminPatientsPage({
         <p className="text-sm text-red-600">Vous devez être connecté.</p>
       </div>
     );
+  }
+
+  // Guard: only staff can access this page
+  // Use service client to bypass any RLS restrictions when reading the role
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  const role = me?.role || "patient";
+  const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
+  if (!STAFF_ROLES.has(role)) {
+    redirect(`/${role}`);
   }
 
   // Fetch a list of users (profiles) for selection
