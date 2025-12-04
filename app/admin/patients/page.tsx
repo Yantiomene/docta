@@ -35,11 +35,12 @@ export default async function AdminPatientsPage({
   }
 
   // Fetch a list of users (profiles) for selection
-  const { data: profiles } = await supabase
+  // Fetch profiles via service client to avoid RLS blocking admin search
+  const { data: profiles } = await getServiceSupabase()
     .from("profiles")
     .select("id, email, nom, prenom, role")
     .order("prenom", { ascending: true })
-    .limit(100);
+    .limit(500);
 
   return (
     <div className="space-y-6">
