@@ -1,33 +1,37 @@
-"use client";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { HospitalizationSchema } from "@/lib/schemas";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-
-type FormData = z.infer<typeof HospitalizationSchema>;
+import { createHospitalizationAction } from "@/lib/actions/hospitalizations";
+import PatientAutocomplete from "@/components/features/patients/PatientAutocomplete";
 
 export default function HospitalizationForm() {
-  const form = useForm<FormData>({ resolver: zodResolver(HospitalizationSchema) });
-  function onSubmit(values: FormData) { console.log("create hospitalization", values); }
-
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-      <div>
-        <label className="text-sm">Patient ID</label>
-        <Input {...form.register("patientId")} />
+    <form action={createHospitalizationAction} className="space-y-3">
+      <PatientAutocomplete name="patientId" label="Nom du patient" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label className="text-sm text-foreground">Ward</label>
+          <Input name="ward" />
+        </div>
+        <div>
+          <label className="text-sm text-foreground">Room</label>
+          <Input name="room" />
+        </div>
+        <div>
+          <label className="text-sm text-foreground">Bed</label>
+          <Input name="bed" />
+        </div>
       </div>
-      <div>
-        <label className="text-sm">Ward</label>
-        <Input {...form.register("ward")} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="text-sm text-foreground">Admitted At</label>
+          <Input type="datetime-local" name="admittedAt" required />
+        </div>
+        <div>
+          <label className="text-sm text-foreground">Status</label>
+          <Input name="status" defaultValue="active" />
+        </div>
       </div>
-      <div>
-        <label className="text-sm">Admitted At</label>
-        <Input type="datetime-local" {...form.register("admittedAt")} />
-      </div>
-      <Button type="submit">Save Hospitalization</Button>
+      <Button type="submit">Créer l'hospitalisation</Button>
     </form>
   );
 }
-
