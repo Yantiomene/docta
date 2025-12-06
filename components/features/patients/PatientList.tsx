@@ -11,15 +11,21 @@ type PatientRow = {
   created_at: string;
 };
 
-export default async function PatientList() {
+export default async function PatientList({ query }: { query?: string }) {
   const supabase = getServerSupabase();
-  const { data, error } = await supabase
+  const base = supabase
     .from("patients")
     .select(
       "id, first_name, last_name, email, phone, user_id, managed_by_staff, created_at"
-    )
-    .order("created_at", { ascending: false })
-    .limit(50);
+    );
+  const q = (query || "").trim();
+  let req = base;
+  if (q) {
+    req = req.or(
+      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`
+    );
+  }
+  const { data, error } = await req.order("created_at", { ascending: false }).limit(50);
 
   return (
     <div className="rounded-lg border p-4">
@@ -46,7 +52,12 @@ export default async function PatientList() {
               {data.map((p: PatientRow) => (
                 <tr key={p.id} className="border-b last:border-b-0">
                   <td className="py-2 pr-2">
-                    {p.last_name} {p.first_name}
+                    <a
+                      href={`/admin/patients/${p.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {p.last_name} {p.first_name}
+                    </a>
                   </td>
                   <td className="py-2 pr-2">
                     {p.email || "—"} / {p.phone || "—"}

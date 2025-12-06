@@ -42,6 +42,12 @@ Après configuration, relancez un déploiement en Production afin d’enregistre
    - Une fois connecté, le Navbar affiche votre avatar/initiale avec un menu (Préférences, Logout, Administration si admin)
 3) Navigation: consultez les tableaux de bord (`/admin`, `/medecin`, `/infirmiere`, `/patient`) selon votre rôle (assigné par un administrateur)
 
+### Détail patient (nouveau)
+- Un lien vers la page de détail est disponible dans la liste des patients et les suggestions de recherche.
+- Route: `/admin/patients/[id]`
+- Affiche: nom, contact, date de naissance, genre, groupe sanguin, utilisateur lié, gestion par staff, dates de création/mise à jour.
+- Accès: réservé aux rôles staff (`admin`, `medecin`, `infirmiere`).
+
 ## Variables d'environnement
 Créez un fichier `.env.local` (exemple dans `.env.local.example`).
 
