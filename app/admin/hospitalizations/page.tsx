@@ -4,10 +4,11 @@ import HospitalizationList from "@/components/features/hospitalizations/Hospital
 export default function AdminHospitalizationsPage({
   searchParams,
 }: {
-  searchParams: { success?: string; error?: string };
+  searchParams: { success?: string; error?: string; ts?: string };
 }) {
   const success = searchParams?.success;
   const error = searchParams?.error;
+  const ts = searchParams?.ts;
 
   return (
     <div className="space-y-6">
@@ -25,7 +26,7 @@ export default function AdminHospitalizationsPage({
 
       <div>
         <h2 className="text-lg font-medium mb-2">Nouvelle hospitalisation</h2>
-        <HospitalizationForm />
+        <HospitalizationForm key={ts ?? "form"} />
       </div>
 
       <div>

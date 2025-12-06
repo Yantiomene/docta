@@ -36,7 +36,8 @@ export async function createHospitalizationAction(formData: FormData) {
   const parsed = HospitalizationSchema.safeParse({ patientId, ward, room, bed, admittedAt, dischargedAt, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(msg)}`);
+    const ts = Date.now();
+    redirect(`/admin/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
   }
 
   const payload = {
@@ -52,9 +53,11 @@ export async function createHospitalizationAction(formData: FormData) {
 
   const { error } = await supabase.from("hospitalizations").insert(payload);
   if (error) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}`);
+    const ts = Date.now();
+    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
   }
-  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation créée")}`);
+  const ts = Date.now();
+  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation créée")}&ts=${ts}`);
 }
 
 // Staff: discharge a hospitalization (set status + timestamp)
@@ -123,4 +126,3 @@ export async function deleteHospitalizationAction(formData: FormData) {
   }
   redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation supprimée")}`);
 }
-

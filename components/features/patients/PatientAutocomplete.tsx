@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Input from "@/components/ui/input";
+import Button from "@/components/ui/button";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type PatientRow = {
@@ -62,6 +63,11 @@ export default function PatientAutocomplete({
     setQuery(`${row.last_name ?? ""} ${row.first_name ?? ""}`.trim());
     setResults([]);
   };
+  const clearSelection = () => {
+    setSelected(null);
+    setQuery("");
+    setResults([]);
+  };
 
   return (
     <div className="relative">
@@ -78,9 +84,14 @@ export default function PatientAutocomplete({
         className="mt-1"
       />
       {selected && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sélectionné: {(selected.last_name || "") + " " + (selected.first_name || "")} {selected.email ? `— ${selected.email}` : ""}
-        </p>
+        <div className="mt-1 flex items-center gap-2">
+          <p className="text-xs text-muted-foreground">
+            Sélectionné: {(selected.last_name || "") + " " + (selected.first_name || "")} {selected.email ? `— ${selected.email}` : ""}
+          </p>
+          <Button type="button" variant="outline" className="px-2 py-1 text-xs" onClick={clearSelection}>
+            Effacer la sélection
+          </Button>
+        </div>
       )}
       {!selected && (query.trim().length > 0) && (
         <div className="absolute z-10 mt-1 w-full rounded-md border border-muted bg-background shadow">
@@ -111,4 +122,3 @@ export default function PatientAutocomplete({
     </div>
   );
 }
-
