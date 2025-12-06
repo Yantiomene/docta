@@ -53,7 +53,7 @@ export default async function PatientList({ query }: { query?: string }) {
                 <tr key={p.id} className="border-b last:border-b-0">
                   <td className="py-2 pr-2">
                     <a
-                      href={`/admin/patients/${p.id}`}
+                      href={`?pid=${p.id}`}
                       className="text-blue-600 hover:underline"
                     >
                       {p.last_name} {p.first_name}

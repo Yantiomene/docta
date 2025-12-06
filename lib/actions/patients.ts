@@ -304,3 +304,97 @@ export async function upsertSelfPatientAction(formData: FormData) {
   }
   redirect(`/patient/dossier?success=${encodeURIComponent("Dossier enregistré")}`);
 }
+
+// Staff: update an existing patient dossier
+export async function updatePatientAction(formData: FormData) {
+  const supabase = getServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const currentUser = auth?.user;
+  if (!currentUser) redirect("/auth/login");
+
+  // Ensure staff role
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
+  if (!STAFF_ROLES.has(role)) {
+    redirect(`/admin/patients?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+  }
+
+  const id = (formData.get("patient_id") || "").toString().trim();
+  const firstName = (formData.get("firstName") || "").toString().trim();
+  const lastName = (formData.get("lastName") || "").toString().trim();
+  const email = (formData.get("email") || "").toString().trim() || undefined;
+  const phone = (formData.get("phone") || "").toString().trim() || undefined;
+  const dob = (formData.get("dob") || "").toString().trim() || undefined;
+  const genderRaw = (formData.get("gender") || "").toString().trim();
+  const gender = genderRaw ? (genderRaw as "male" | "female" | "other") : undefined;
+  const bloodTypeRaw = (formData.get("bloodType") || "").toString().trim();
+  const bloodType = bloodTypeRaw
+    ? (bloodTypeRaw as "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-")
+    : undefined;
+
+  if (!id) {
+    redirect(`/admin/patients?error=${encodeURIComponent("Patient ID manquant")}`);
+  }
+
+  // Validate payload
+  const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender, bloodType });
+  if (!parsed.success) {
+    const msg = parsed.error.issues?.[0]?.message || "Invalid fields";
+    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(msg)}`);
+  }
+
+  const payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email: email ?? null,
+    phone: phone ?? null,
+    dob: dob ?? null,
+    gender: gender ?? null,
+    blood_type: bloodType ?? null,
+    updated_at: new Date().toISOString(),
+  } as const;
+
+  const { error } = await supabase.from("patients").update(payload).eq("id", id);
+  if (error) {
+    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(`/admin/patients?pid=${encodeURIComponent(id)}&success=${encodeURIComponent("Dossier mis à jour")}`);
+}
+
+// Admin: delete a patient dossier
+export async function deletePatientAction(formData: FormData) {
+  const supabase = getServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const currentUser = auth?.user;
+  if (!currentUser) redirect("/auth/login");
+
+  // Ensure admin role via service client
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  const isAdmin = role === "admin";
+  if (!isAdmin) {
+    redirect(`/admin/patients?error=${encodeURIComponent("Suppression réservée aux administrateurs")}`);
+  }
+
+  const id = (formData.get("patient_id") || "").toString().trim();
+  if (!id) {
+    redirect(`/admin/patients?error=${encodeURIComponent("Patient ID manquant")}`);
+  }
+
+  const { error } = await supabase.from("patients").delete().eq("id", id);
+  if (error) {
+    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(`/admin/patients?success=${encodeURIComponent("Dossier supprimé")}`);
+}

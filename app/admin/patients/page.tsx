@@ -2,6 +2,7 @@ import PatientForm from "@/components/features/patients/PatientForm";
 import PatientList from "@/components/features/patients/PatientList";
 import PatientSearch from "@/components/features/patients/PatientSearch";
 import PatientSuggestions from "@/components/features/patients/PatientSuggestions";
+import PatientDrawer from "@/components/features/patients/PatientDrawer";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 import { redirect } from "next/navigation";
 
@@ -63,6 +64,12 @@ export default async function AdminPatientsPage({
         <PatientSuggestions query={typeof searchParams?.q === "string" ? String(searchParams.q) : ""} />
       </div>
       <PatientList query={typeof searchParams?.q === "string" ? String(searchParams.q) : undefined} />
+      {typeof searchParams?.pid === "string" && searchParams?.pid ? (
+        <PatientDrawer patientId={String(searchParams.pid)} searchParams={{
+          success: typeof searchParams?.success === "string" ? String(searchParams.success) : undefined,
+          error: typeof searchParams?.error === "string" ? String(searchParams.error) : undefined,
+        }} />
+      ) : null}
     </div>
   );
 }

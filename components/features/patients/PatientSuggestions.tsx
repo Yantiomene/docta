@@ -41,7 +41,7 @@ export default async function PatientSuggestions({ query }: { query: string }) {
         {data.map((p: PatientRow) => (
           <li key={p.id} className="text-sm">
             <a
-              href={`/admin/patients/${p.id}`}
+              href={`?pid=${p.id}`}
               className="text-blue-600 hover:underline"
             >
               {(p.last_name || "") + " " + (p.first_name || "")} {p.email ? `— ${p.email}` : ""}
