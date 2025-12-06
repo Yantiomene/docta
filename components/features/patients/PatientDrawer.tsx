@@ -35,12 +35,12 @@ export default async function PatientDrawer({ patientId, searchParams }: { patie
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl border-l">
-        <div className="flex items-center justify-between border-b p-4">
+      <div className="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl border-l flex flex-col">
+        <div className="flex items-center justify-between border-b p-4 shrink-0">
           <h2 className="text-lg font-semibold">Dossier Patient</h2>
           <a href="/admin/patients" className="text-sm text-gray-600 hover:underline">Fermer</a>
         </div>
-        <div className="p-4 space-y-4 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-4 overflow-y-auto">
           {errMsg ? (
             <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">{errMsg}</div>
           ) : null}
@@ -67,7 +67,7 @@ export default async function PatientDrawer({ patientId, searchParams }: { patie
                 </div>
               </div>
 
-              <form action={updatePatientAction} className="space-y-3">
+              <form id="updatePatientForm" action={updatePatientAction} className="space-y-3">
                 <input type="hidden" name="patient_id" value={patient.id} />
                 <div>
                   <label className="text-sm">Nom</label>
@@ -112,16 +112,16 @@ export default async function PatientDrawer({ patientId, searchParams }: { patie
                     <option value="O-">O-</option>
                   </Select>
                 </div>
-                <div className="flex gap-2">
-                  <Button type="submit">Mettre à jour</Button>
-                </div>
               </form>
-              {role === "admin" ? (
-                <form action={deletePatientAction}>
-                  <input type="hidden" name="patient_id" value={patient.id} />
-                  <Button type="submit" className="bg-red-600 hover:bg-red-700">Supprimer</Button>
-                </form>
-              ) : null}
+              <div className="sticky bottom-0 left-0 right-0 bg-white/90 backdrop-blur p-3 border-t flex gap-2">
+                <Button type="submit" form="updatePatientForm">Mettre à jour</Button>
+                {role === "admin" ? (
+                  <form action={deletePatientAction}>
+                    <input type="hidden" name="patient_id" value={patient.id} />
+                    <Button type="submit" className="bg-red-600 hover:bg-red-700">Supprimer</Button>
+                  </form>
+                ) : null}
+              </div>
             </>
           )}
         </div>
