@@ -2,9 +2,10 @@ import Link from "next/link";
 import { getServerSupabase } from "@/lib/supabaseServer";
 import type { Role } from "@/lib/types";
 import Button from "@/components/ui/button";
+import AuthAwareCTA from "@/components/features/common/AuthAwareCTA";
 
 // Server Component: unified landing for all roles
-export default async function RoleLanding({ role, basePath, showQuickAccess = true }: { role?: Role | null; basePath?: string | null; showQuickAccess?: boolean }): Promise<JSX.Element> {
+export default async function RoleLanding({ role, basePath, showQuickAccess = true, isAuthenticated = false }: { role?: Role | null; basePath?: string | null; showQuickAccess?: boolean; isAuthenticated?: boolean }): Promise<JSX.Element> {
   const supabase = getServerSupabase();
 
   async function safeCount(table: string) {
@@ -26,7 +27,7 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
   ]);
 
   const isPatient = role === "patient";
-  const isLoggedIn = !!role;
+  const isLoggedIn = isAuthenticated;
 
   // Map links by role while keeping identical layout
   const links = !isLoggedIn || !basePath
@@ -64,15 +65,7 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
             accompagne patients et équipes médicales avec une interface moderne et unifiée.
           </p>
           <div className="flex flex-wrap gap-3 mt-2">
-            {isLoggedIn ? (
-              <Link href={basePath ?? "/post-login"}>
-                <Button className="px-5 py-2">Accéder à mon espace</Button>
-              </Link>
-            ) : (
-              <Link href="/auth/login">
-                <Button className="px-5 py-2">Accéder à mon espace</Button>
-              </Link>
-            )}
+            <AuthAwareCTA isAuthenticatedServer={isLoggedIn} basePath={basePath ?? undefined} />
           </div>
         </div>
       </section>

@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { RolePaths } from "@/lib/rbac";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import RoleLanding from "@/components/features/common/RoleLanding";
 import type { Role } from "@/lib/types";
 
@@ -44,5 +47,6 @@ export default async function Home() {
 
   const basePath = role && RolePaths[role] ? `/${RolePaths[role]}` : undefined;
 
-  return <RoleLanding role={role ?? null} basePath={basePath ?? null} showQuickAccess={false} />;
+  const isAuthenticated = !!userId;
+  return <RoleLanding role={role ?? null} basePath={basePath ?? null} showQuickAccess={false} isAuthenticated={isAuthenticated} />;
 }
