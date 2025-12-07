@@ -64,8 +64,8 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
             accompagne patients et équipes médicales avec une interface moderne et unifiée.
           </p>
           <div className="flex flex-wrap gap-3 mt-2">
-            {isLoggedIn && basePath ? (
-              <Link href={basePath}>
+            {isLoggedIn ? (
+              <Link href={basePath ?? "/post-login"}>
                 <Button className="px-5 py-2">Accéder à mon espace</Button>
               </Link>
             ) : (
