@@ -71,7 +71,7 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
               </div>
             </div>
             <div className="relative w-full">
-              <img src="/hero-3d.svg" alt="Illustration 3D Docta" className="w-full h-auto" />
+      <img src="/abdd9300-450e-5ac1-8d62-d59e6323f431.jpg" alt="Modern hospital room with nurse caring for patient" className="w-full h-auto" />
             </div>
           </div>
         </section>
