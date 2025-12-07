@@ -2,6 +2,14 @@
 
 Docta est une application de gestion sanitaire avec des tableaux de bord orientés rôles (`admin`, `médecin`, `infirmière`, `patient`). Elle utilise Next.js (App Router), TypeScript, Tailwind CSS et Supabase.
 
+## Landing unifiée (nouveau)
+- Une page d’accueil identique et plus parlante est utilisée pour tous les rôles via un composant serveur partagé.
+- Fichier: `components/features/common/RoleLanding.tsx` (Server Component)
+- Contenu: hero de bienvenue, métriques (compteurs sécurisés Supabase) et grille d’accès rapide.
+- Adaptation par rôle: les liens rapides s’adaptent au rôle (`admin`, `medecin`, `infirmiere`, `patient`) tout en gardant la même mise en page.
+- Intégration: les pages `/admin`, `/medecin`, `/infirmiere`, `/patient` importent `RoleLanding` avec props `role` et `basePath`.
+- Stack respectée: data fetched côté serveur (Supabase) dans un Server Component; pas de fetch client inutile.
+
 ## Barres latérales repliables (nouveau)
 - Les barres latérales de chaque rôle (Admin, Infirmière, Médecin, Patient) peuvent être repliées/étendues via un bouton toggle en haut du panneau.
 - En mode replié, la largeur passe à `w-16` (mobile inclus) et en mode étendu `w-56`.
