@@ -1,0 +1,126 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { SoinSchema } from "@/lib/schemas";
+import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+
+// Create a soin (staff-only: admin, medecin, infirmiere)
+export async function createSoinAction(formData: FormData) {
+  const supabase = getServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const currentUser = auth?.user;
+  if (!currentUser) redirect("/auth/login");
+
+  // RBAC: ensure staff
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser!.id)
+    .maybeSingle();
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
+  if (!STAFF_ROLES.has(role)) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+  }
+
+  // Extract fields
+  const patientId = (formData.get("patientId") || "").toString().trim();
+  const title = (formData.get("title") || "").toString().trim();
+  const description = (formData.get("description") || "").toString().trim() || undefined;
+  const scheduledAt = (formData.get("scheduledAt") || "").toString().trim();
+  const assignedToNurseId = (formData.get("assignedToNurseId") || "").toString().trim() || undefined;
+  const statusRaw = (formData.get("status") || "").toString().trim() || "scheduled";
+  const status = statusRaw as "scheduled" | "in_progress" | "done" | "missed";
+
+  const parsed = SoinSchema.safeParse({ patientId, title, description, scheduledAt, assignedToNurseId, status });
+  if (!parsed.success) {
+    const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
+    redirect(`/infirmiere/soins?error=${encodeURIComponent(msg)}`);
+  }
+
+  const payload = {
+    patient_id: patientId,
+    title,
+    description: description ?? null,
+    scheduled_at: scheduledAt,
+    assigned_to_nurse_id: assignedToNurseId ?? null,
+    status,
+    created_at: new Date().toISOString(),
+  } as const;
+
+  const { error } = await supabase.from("soins").insert(payload);
+  if (error) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(`/infirmiere/soins?success=${encodeURIComponent("Soin créé")}`);
+}
+
+// Update a soin's status (staff-only)
+export async function updateSoinStatusAction(formData: FormData) {
+  const supabase = getServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const currentUser = auth?.user;
+  if (!currentUser) redirect("/auth/login");
+
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser!.id)
+    .maybeSingle();
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
+  if (!STAFF_ROLES.has(role)) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+  }
+
+  const id = (formData.get("soin_id") || "").toString().trim();
+  const statusRaw = (formData.get("status") || "").toString().trim();
+  const status = statusRaw as "scheduled" | "in_progress" | "done" | "missed";
+
+  if (!id || !status) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("ID ou statut manquant")}`);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("soins")
+    .update({ status, updated_at: now })
+    .eq("id", id);
+  if (error) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(`/infirmiere/soins?success=${encodeURIComponent("Statut du soin mis à jour")}`);
+}
+
+// Delete a soin (admin-only)
+export async function deleteSoinAction(formData: FormData) {
+  const supabase = getServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const currentUser = auth?.user;
+  if (!currentUser) redirect("/auth/login");
+
+  const service = getServiceSupabase();
+  const { data: me } = await service
+    .from("profiles")
+    .select("role")
+    .eq("id", currentUser!.id)
+    .maybeSingle();
+  const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  if (role !== "admin") {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Accès refusé: admin requis pour supprimer")}`);
+  }
+
+  const id = (formData.get("soin_id") || "").toString().trim();
+  if (!id) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Soin ID manquant")}`);
+  }
+
+  const { error } = await supabase.from("soins").delete().eq("id", id);
+  if (error) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(`/infirmiere/soins?success=${encodeURIComponent("Soin supprimé")}`);
+}
+

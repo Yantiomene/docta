@@ -48,6 +48,20 @@ Après configuration, relancez un déploiement en Production afin d’enregistre
 - Affiche: nom, contact, date de naissance, genre, groupe sanguin, utilisateur lié, gestion par staff, dates de création/mise à jour.
 - Accès: réservé aux rôles staff (`admin`, `medecin`, `infirmiere`).
 
+### Soins (nouveau)
+- Pages: `/admin/soins` (administration) et `/infirmiere/soins` (infirmière)
+- Composants: `SoinForm` (création) et `SoinList` (liste + mise à jour statut)
+- Actions serveur: `lib/actions/soins.ts` — `createSoinAction`, `updateSoinStatusAction`, `deleteSoinAction`
+- Champs: patient (via `PatientAutocomplete`), titre, description, date & heure planifiées, statut (`planned` | `in_progress` | `done`), infirmière assignée (si rôle staff)
+- RBAC:
+  - Création & mise à jour statut: staff (`admin`, `medecin`, `infirmiere`)
+  - Suppression: `admin` uniquement
+- Persistance: Supabase (`public.soins`) avec RLS attendu pour respecter les rôles ci-dessus
+- Flux:
+  - L’infirmière voit ses soins assignés; l’admin voit tous les soins
+  - Mise à jour du statut inline; suppression via modale de confirmation côté admin
+  - Les formulaires utilisent des Server Actions (pas de `fetch` client)
+
 ## Variables d'environnement
 Créez un fichier `.env.local` (exemple dans `.env.local.example`).
 
