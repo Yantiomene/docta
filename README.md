@@ -4,7 +4,8 @@ Docta est une application de gestion sanitaire avec des tableaux de bord orient�
 
 ## Barres latérales repliables (nouveau)
 - Les barres latérales de chaque rôle (Admin, Infirmière, Médecin, Patient) peuvent être repliées/étendues via un bouton toggle en haut du panneau.
-- En mode replié, la largeur passe à `sm:w-16` et les libellés des liens sont masqués visuellement (accessibles via `title`/`aria-label`).
+- En mode replié, la largeur passe à `w-16` (mobile inclus) et en mode étendu `w-56`.
+- Les libellés des liens sont masqués visuellement en mode replié (accessibles via `title`/`aria-label`).
 - L’état de repli est persistant par rôle grâce à `localStorage` (`sidebar:<role>:collapsed`).
 - Les layouts restent des Client Components uniquement pour l’interactivité; les pages et données continuent d’utiliser des Server Components et des Server Actions.
 

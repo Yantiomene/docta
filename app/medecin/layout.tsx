@@ -17,12 +17,12 @@ export default function MedecinLayout({ children }: { children: React.ReactNode 
     try { localStorage.setItem("sidebar:medecin:collapsed", collapsed ? "1" : "0"); } catch {}
   }, [collapsed]);
 
-  const asideWidth = collapsed ? "sm:w-16" : "sm:w-64";
+  const asideWidth = collapsed ? "w-16" : "w-56"; // réduit par défaut
   const labelCls = collapsed ? "sr-only" : "";
 
   return (
     <div className="min-h-screen flex">
-      <aside className={`w-64 ${asideWidth} border-r p-4 space-y-3 transition-[width] duration-200`}>
+      <aside className={`${asideWidth} border-r p-4 space-y-3 transition-[width] duration-200`}>
         <div className="flex items-center justify-between">
           <h2 className={`text-lg font-semibold ${labelCls}`}>Médecin</h2>
           <Button type="button" variant="outline" className="px-2 py-1" onClick={() => setCollapsed((v) => !v)}>

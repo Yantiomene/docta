@@ -19,12 +19,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch {}
   }, [collapsed]);
 
-  const asideWidth = collapsed ? "sm:w-16" : "sm:w-64";
+  const asideWidth = collapsed ? "w-16" : "w-56"; // réduit par défaut, replié aussi sur mobile
   const labelCls = collapsed ? "sr-only" : "";
 
   return (
-    <div className="min-h-screen flex flex-col sm:flex-row w-full">
-      <aside className={`w-full ${asideWidth} sm:border-r border-b sm:border-b-0 p-4 space-y-3 transition-[width] duration-200`}>
+    <div className="min-h-screen flex w-full">
+      <aside className={`${asideWidth} border-r p-4 space-y-3 transition-[width] duration-200`}>
         <div className="flex items-center justify-between">
           <h2 className={`text-lg font-semibold ${labelCls}`}>Admin</h2>
           <Button type="button" variant="outline" className="px-2 py-1" onClick={() => setCollapsed((v) => !v)}>
