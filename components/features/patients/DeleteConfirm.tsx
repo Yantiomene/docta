@@ -18,7 +18,13 @@ export default function DeleteConfirm({
 
   const confirmDelete = () => {
     const form = document.getElementById(formId) as HTMLFormElement | null;
-    if (form) form.submit();
+    if (form) {
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else {
+        form.submit();
+      }
+    }
     setOpen(false);
   };
 
