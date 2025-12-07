@@ -2,6 +2,12 @@
 
 Docta est une application de gestion sanitaire avec des tableaux de bord orientés rôles (`admin`, `médecin`, `infirmière`, `patient`). Elle utilise Next.js (App Router), TypeScript, Tailwind CSS et Supabase.
 
+## Barres latérales repliables (nouveau)
+- Les barres latérales de chaque rôle (Admin, Infirmière, Médecin, Patient) peuvent être repliées/étendues via un bouton toggle en haut du panneau.
+- En mode replié, la largeur passe à `sm:w-16` et les libellés des liens sont masqués visuellement (accessibles via `title`/`aria-label`).
+- L’état de repli est persistant par rôle grâce à `localStorage` (`sidebar:<role>:collapsed`).
+- Les layouts restent des Client Components uniquement pour l’interactivité; les pages et données continuent d’utiliser des Server Components et des Server Actions.
+
 ## Aperçu du projet
 - App Router: pages par fonctionnalités (patients, rendez-vous, messages, notifications, planning, soins, hospitalisations)
 - Auth & sessions: Supabase (`@supabase/supabase-js`) côté client, `proxy.ts` pour la protection des segments sensibles
