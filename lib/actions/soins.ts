@@ -39,6 +39,34 @@ export async function createSoinAction(formData: FormData) {
     redirect(`/infirmiere/soins?error=${encodeURIComponent(msg)}`);
   }
 
+  // Validate that the patient is hospitalized at the scheduled time
+  const scheduled = new Date(scheduledAt);
+  if (isNaN(scheduled.getTime())) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Date/heure planifiées invalides")}`);
+  }
+
+  const { data: hosps, error: hospErr } = await supabase
+    .from("hospitalizations")
+    .select("id, admitted_at, discharged_at, status")
+    .eq("patient_id", patientId)
+    .or("status.eq.active,status.eq.planned");
+  if (hospErr) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent(hospErr.message)}`);
+  }
+  const isHospitalized = (hosps || []).some((h) => {
+    const admitted = new Date((h as any).admitted_at);
+    const dischargedRaw = (h as any).discharged_at as string | null;
+    const discharged = dischargedRaw ? new Date(dischargedRaw) : null;
+    const status = String((h as any).status || "");
+    if (isNaN(admitted.getTime())) return false;
+    const withinStay = discharged ? scheduled >= admitted && scheduled <= discharged : scheduled >= admitted;
+    const statusOk = status === "active" || status === "planned";
+    return statusOk && withinStay;
+  });
+  if (!isHospitalized) {
+    redirect(`/infirmiere/soins?error=${encodeURIComponent("Le patient n'est pas hospitalisé à la date prévue")}`);
+  }
+
   const payload = {
     patient_id: patientId,
     title,
@@ -123,4 +151,3 @@ export async function deleteSoinAction(formData: FormData) {
   }
   redirect(`/infirmiere/soins?success=${encodeURIComponent("Soin supprimé")}`);
 }
-

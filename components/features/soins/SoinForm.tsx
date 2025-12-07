@@ -22,6 +22,20 @@ export default async function SoinForm() {
   }
 
   const todayIso = new Date().toISOString().slice(0, 16);
+  const commonTitles = [
+    "Pansement",
+    "Contrôle pansement",
+    "Injection",
+    "Perfusion",
+    "Prise de tension",
+    "Température",
+    "Glycémie",
+    "Antalgique",
+    "Antibiotique",
+    "Toilette",
+    "Hygiène",
+    "Changement de sonde",
+  ];
 
   return (
     <div className="rounded-lg border p-4 space-y-4">
@@ -33,7 +47,11 @@ export default async function SoinForm() {
 
         <div className="sm:col-span-2">
           <label className="text-sm text-foreground">Titre</label>
-          <Input name="title" required minLength={2} placeholder="Ex: Pansement, injection, contrôle" />
+          <Select name="title" defaultValue={commonTitles[0]} className="w-full">
+            {commonTitles.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Select>
         </div>
 
         <div className="sm:col-span-2">
@@ -72,4 +90,3 @@ export default async function SoinForm() {
     </div>
   );
 }
-

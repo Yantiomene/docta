@@ -7,7 +7,45 @@ import { formatDate } from "@/lib/utils";
 
 type Scope = "infirmiere" | "admin";
 
-export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope }) {
+function statusBadge(status: string, scheduledAt: string) {
+  const now = new Date();
+  const sched = new Date(scheduledAt);
+  const overdue = status !== "done" && !isNaN(sched.getTime()) && sched < now;
+  let label = "";
+  let cls = "";
+  switch (status) {
+    case "scheduled":
+      label = overdue ? "Planifié (retard)" : "Planifié";
+      cls = overdue ? "bg-red-100 text-red-700 border-red-300" : "bg-blue-100 text-blue-700 border-blue-300";
+      break;
+    case "in_progress":
+      label = "En cours";
+      cls = "bg-yellow-100 text-yellow-800 border-yellow-300";
+      break;
+    case "done":
+      label = "Fait";
+      cls = "bg-green-100 text-green-700 border-green-300";
+      break;
+    case "missed":
+      label = "Manqué";
+      cls = "bg-red-100 text-red-700 border-red-300";
+      break;
+    default:
+      label = status;
+      cls = "bg-gray-100 text-gray-700 border-gray-300";
+  }
+  let extra = "";
+  if (overdue) {
+    const diffMs = now.getTime() - sched.getTime();
+    const diffMin = Math.round(diffMs / 60000);
+    const h = Math.floor(diffMin / 60);
+    const m = diffMin % 60;
+    extra = ` (délais dépassé de ${h}h${m}m)`;
+  }
+  return { label: label + extra, cls };
+}
+
+export default async function SoinList({ scope = "infirmiere", filters }: { scope?: Scope; filters?: { start?: string; end?: string; q?: string } }) {
   const supabase = getServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
   const currentUser = auth?.user || null;
@@ -30,6 +68,20 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
     query = query.eq("assigned_to_nurse_id", currentUser.id);
   }
 
+  // Apply date range filters
+  if (filters?.start) {
+    query = query.gte("scheduled_at", filters.start);
+  }
+  if (filters?.end) {
+    // Add one day to include end date fully if provided as YYYY-MM-DD
+    query = query.lte("scheduled_at", filters.end + "T23:59:59.999Z");
+  }
+  // Apply text search on title/description
+  if (filters?.q && filters.q.trim() !== "") {
+    const like = `%${filters.q.trim()}%`;
+    query = query.or(`title.ilike.${like},description.ilike.${like}`);
+  }
+
   const { data: rows, error } = await query;
   if (error) {
     return (
@@ -39,7 +91,49 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
     );
   }
 
-  const soins = rows ?? [];
+  let soins = rows ?? [];
+  // Fallback text search against patient name if provided
+  if (filters?.q && filters.q.trim() !== "") {
+    const q = filters.q.trim().toLowerCase();
+    soins = soins.filter((s: any) => {
+      const patientName = `${s.patients?.first_name ?? ""} ${s.patients?.last_name ?? ""}`.toLowerCase();
+      return (
+        (s.title ?? "").toLowerCase().includes(q) ||
+        (s.description ?? "").toLowerCase().includes(q) ||
+        patientName.includes(q)
+      );
+    });
+  }
+
+  // Fetch hospitalization (ward/bed) for patients present
+  const patientIds = Array.from(new Set(soins.map((s) => s.patient_id).filter(Boolean)));
+  let hosps: Record<string, { ward?: string | null; bed?: string | null }> = {};
+  if (patientIds.length > 0) {
+    const { data: hospRows } = await supabase
+      .from("hospitalizations")
+      .select("patient_id, ward, bed, status, admitted_at, discharged_at")
+      .in("patient_id", patientIds);
+    (hospRows || []).forEach((h: any) => {
+      // Prefer active; fallback to planned; pick the most recent admitted_at
+      const key = h.patient_id as string;
+      const prev = hosps[key];
+      const isBetter = !prev || h.status === "active";
+      if (isBetter) hosps[key] = { ward: h.ward ?? null, bed: h.bed ?? null };
+    });
+  }
+
+  // Fetch nurse names for assigned_to_nurse_id
+  const nurseIds = Array.from(new Set(soins.map((s) => s.assigned_to_nurse_id).filter(Boolean))) as string[];
+  const nurseMap: Record<string, { nom?: string; prenom?: string }> = {};
+  if (nurseIds.length > 0) {
+    const { data: nurses } = await getServiceSupabase()
+      .from("profiles")
+      .select("id, nom, prenom")
+      .in("id", nurseIds);
+    (nurses || []).forEach((n: any) => {
+      nurseMap[n.id] = { nom: n.nom, prenom: n.prenom };
+    });
+  }
 
   return (
     <div className="rounded-lg border mt-4 overflow-x-auto">
@@ -49,6 +143,7 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
             <th className="text-left px-3 py-2">Patient</th>
             <th className="text-left px-3 py-2">Titre</th>
             <th className="text-left px-3 py-2">Planifié</th>
+            <th className="text-left px-3 py-2">Salle / Lit</th>
             <th className="text-left px-3 py-2">Statut</th>
             <th className="text-right px-3 py-2">Actions</th>
           </tr>
@@ -64,6 +159,16 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
                 <td className="px-3 py-2">{s.title}</td>
                 <td className="px-3 py-2">{formatDate(s.scheduled_at)}</td>
                 <td className="px-3 py-2">
+                  {(() => {
+                    const h = hosps[s.patient_id] || { ward: null, bed: null };
+                    const ward = h.ward || "-";
+                    const bed = h.bed || "-";
+                    return (
+                      <span className="text-sm text-muted-foreground">{ward} / {bed}</span>
+                    );
+                  })()}
+                </td>
+                <td className="px-3 py-2">
                   <form action={updateSoinStatusAction} className="inline-flex items-center gap-2">
                     <input type="hidden" name="soin_id" value={s.id} />
                     <Select name="status" defaultValue={s.status} className="w-36">
@@ -74,6 +179,18 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
                     </Select>
                     <Button type="submit" className="px-2 py-1">Mettre à jour</Button>
                   </form>
+                  {(() => {
+                    const { label, cls } = statusBadge(s.status as string, s.scheduled_at as string);
+                    const nurse = s.status === "done" && s.assigned_to_nurse_id ? nurseMap[s.assigned_to_nurse_id] : null;
+                    return (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className={`inline-block rounded border px-2 py-0.5 text-xs ${cls}`}>{label}</span>
+                        {nurse && (
+                          <span className="text-xs text-muted-foreground">par {nurse.nom ?? ""} {nurse.prenom ?? ""}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-end gap-2">
@@ -103,4 +220,3 @@ export default async function SoinList({ scope = "infirmiere" }: { scope?: Scope
     </div>
   );
 }
-
