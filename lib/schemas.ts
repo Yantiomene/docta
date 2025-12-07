@@ -32,6 +32,16 @@ export const HospitalizationSchema = z.object({
   status: z.enum(["active", "discharged", "planned"]),
 });
 
+export const UpdateHospitalizationSchema = z.object({
+  id: z.string().min(1),
+  ward: z.string().optional(),
+  room: z.string().optional(),
+  bed: z.string().optional(),
+  admittedAt: z.string().optional(),
+  dischargedAt: z.string().optional(),
+  status: z.enum(["active", "discharged", "planned"]).optional(),
+});
+
 export const SoinSchema = z.object({
   patientId: z.string().min(1),
   title: z.string().min(1),
