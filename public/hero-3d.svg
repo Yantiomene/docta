@@ -1,0 +1,59 @@
+<svg width="640" height="480" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Docta 3D Illustration</title>
+  <desc id="desc">Isometric cubes and shapes with soft gradients representing coordinated healthcare.</desc>
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C63FF" />
+      <stop offset="100%" stop-color="#48C9B0" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#17A2B8" />
+      <stop offset="100%" stop-color="#FADADD" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#34495E" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Background blob -->
+  <g opacity="0.25">
+    <ellipse cx="520" cy="120" rx="160" ry="80" fill="url(#grad2)" />
+  </g>
+
+  <!-- Isometric platform -->
+  <g filter="url(#shadow)">
+    <polygon points="160,260 320,180 480,260 320,340" fill="#E2E8F0" />
+    <polygon points="160,260 320,340 320,420 160,340" fill="#CBD5E1" />
+    <polygon points="480,260 320,340 320,420 480,340" fill="#94A3B8" />
+  </g>
+
+  <!-- Cubes -->
+  <g filter="url(#shadow)">
+    <!-- Cube 1 -->
+    <polygon points="270,220 320,195 370,220 320,245" fill="url(#grad1)" />
+    <polygon points="270,220 320,245 320,290 270,265" fill="#6C63FF" opacity="0.9" />
+    <polygon points="370,220 320,245 320,290 370,265" fill="#48C9B0" opacity="0.9" />
+
+    <!-- Cube 2 -->
+    <polygon points="200,260 250,235 300,260 250,285" fill="url(#grad2)" />
+    <polygon points="200,260 250,285 250,330 200,305" fill="#17A2B8" opacity="0.9" />
+    <polygon points="300,260 250,285 250,330 300,305" fill="#FADADD" opacity="0.9" />
+
+    <!-- Pill shape representing care -->
+    <ellipse cx="410" cy="230" rx="52" ry="18" fill="url(#grad1)" transform="skewX(-20)" />
+  </g>
+
+  <!-- Connector lines -->
+  <g stroke="#34495E" stroke-opacity="0.2" stroke-width="2" fill="none">
+    <path d="M250 330 L320 360" />
+    <path d="M370 265 L420 300" />
+    <path d="M300 305 L360 330" />
+  </g>
+
+  <!-- Dots -->
+  <g fill="#48C9B0" opacity="0.7">
+    <circle cx="420" cy="300" r="4" />
+    <circle cx="360" cy="330" r="4" />
+    <circle cx="320" cy="360" r="4" />
+  </g>
+</svg>

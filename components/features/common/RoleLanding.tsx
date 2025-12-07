@@ -5,7 +5,7 @@ import Button from "@/components/ui/button";
 import AuthAwareCTA from "@/components/features/common/AuthAwareCTA";
 
 // Server Component: unified landing for all roles
-export default async function RoleLanding({ role, basePath, showQuickAccess = true, isAuthenticated = false }: { role?: Role | null; basePath?: string | null; showQuickAccess?: boolean; isAuthenticated?: boolean }): Promise<JSX.Element> {
+export default async function RoleLanding({ role, basePath, showQuickAccess = true, isAuthenticated = false, showHero = true }: { role?: Role | null; basePath?: string | null; showQuickAccess?: boolean; isAuthenticated?: boolean; showHero?: boolean }): Promise<JSX.Element> {
   const supabase = getServerSupabase();
 
   async function safeCount(table: string) {
@@ -57,18 +57,25 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border p-10 bg-gradient-to-br from-primary/10 to-transparent">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-extrabold tracking-tight">Docta — Simplifiez vos soins au quotidien</h1>
-          <p className="text-lg text-gray-800">
-            Centralisez vos dossiers, planifiez vos rendez-vous, coordonnez les soins et communiquez efficacement. Docta
-            accompagne patients et équipes médicales avec une interface moderne et unifiée.
-          </p>
-          <div className="flex flex-wrap gap-3 mt-2">
-            <AuthAwareCTA isAuthenticatedServer={isLoggedIn} basePath={basePath ?? undefined} />
+      {showHero && (
+        <section className="rounded-lg border p-8 md:p-10 bg-gradient-to-br from-primary/10 to-transparent">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center">
+            <div className="flex flex-col gap-4">
+              <h1 className="text-4xl font-extrabold tracking-tight">Docta — Simplifiez vos soins au quotidien</h1>
+              <p className="text-lg text-gray-800">
+                Centralisez vos dossiers, planifiez vos rendez-vous, coordonnez les soins et communiquez efficacement. Docta
+                accompagne patients et équipes médicales avec une interface moderne et unifiée.
+              </p>
+              <div className="flex flex-wrap gap-3 mt-2">
+                <AuthAwareCTA isAuthenticatedServer={isLoggedIn} basePath={basePath ?? undefined} />
+              </div>
+            </div>
+            <div className="relative w-full">
+              <img src="/hero-3d.svg" alt="Illustration 3D Docta" className="w-full h-auto" />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {!role && (
         <section>
