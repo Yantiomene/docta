@@ -9,6 +9,7 @@ Docta est une application de gestion sanitaire avec des tableaux de bord orient�
 - Adaptation par rôle: les liens rapides s’adaptent au rôle (`admin`, `medecin`, `infirmiere`, `patient`) tout en gardant la même mise en page.
 - Intégration: les pages `/admin`, `/medecin`, `/infirmiere`, `/patient` importent `RoleLanding` avec props `role` et `basePath`.
 - Stack respectée: data fetched côté serveur (Supabase) dans un Server Component; pas de fetch client inutile.
+ - Comportement Home/Logo: le lien `Home` et le logo Docta renvoient vers `/` (landing). Si l’utilisateur est connecté, un bouton "Accéder à mon espace" apparaît et le redirige vers le menu correspondant à son rôle. Si non connecté, des CTAs "Se connecter" / "Créer un compte" sont affichés.
 
 ## Barres latérales repliables (nouveau)
 - Les barres latérales de chaque rôle (Admin, Infirmière, Médecin, Patient) peuvent être repliées/étendues via un bouton toggle en haut du panneau.
