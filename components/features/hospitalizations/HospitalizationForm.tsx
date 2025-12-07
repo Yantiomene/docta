@@ -1,5 +1,6 @@
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import Select from "@/components/ui/select";
 import { createHospitalizationAction } from "@/lib/actions/hospitalizations";
 import PatientAutocomplete from "@/components/features/patients/PatientAutocomplete";
 
@@ -27,9 +28,16 @@ export default function HospitalizationForm() {
           <Input type="datetime-local" name="admittedAt" required />
         </div>
         <div>
-          <label className="text-sm text-foreground">Statut</label>
-          <Input name="status" defaultValue="active" />
+          <label className="text-sm text-foreground">Date de sortie</label>
+          <Input type="datetime-local" name="dischargedAt" />
         </div>
+      </div>
+      <div>
+        <label className="text-sm text-foreground">Statut</label>
+        <Select name="status" defaultValue="active">
+          <option value="active">Actif</option>
+          <option value="discharged">Sortie</option>
+        </Select>
       </div>
       <Button type="submit">Créer l'hospitalisation</Button>
     </form>

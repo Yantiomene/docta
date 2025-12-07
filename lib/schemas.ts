@@ -22,25 +22,51 @@ export const MedicalRecordSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const HospitalizationSchema = z.object({
-  patientId: z.string().min(1),
-  ward: z.string().optional(),
-  room: z.string().optional(),
-  bed: z.string().optional(),
-  admittedAt: z.string().min(1),
-  dischargedAt: z.string().optional(),
-  status: z.enum(["active", "discharged", "planned"]),
-});
+export const HospitalizationSchema = z
+  .object({
+    patientId: z.string().min(1),
+    ward: z.string().optional(),
+    room: z.string().optional(),
+    bed: z.string().optional(),
+    admittedAt: z.string().min(1),
+    dischargedAt: z.string().optional(),
+    status: z.enum(["active", "discharged", "planned"]),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === "discharged") {
+      const hasDate = !!(data.dischargedAt && data.dischargedAt.trim());
+      if (!hasDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La date de sortie est requise lorsque le statut est 'discharged'",
+          path: ["dischargedAt"],
+        });
+      }
+    }
+  });
 
-export const UpdateHospitalizationSchema = z.object({
-  id: z.string().min(1),
-  ward: z.string().optional(),
-  room: z.string().optional(),
-  bed: z.string().optional(),
-  admittedAt: z.string().optional(),
-  dischargedAt: z.string().optional(),
-  status: z.enum(["active", "discharged", "planned"]).optional(),
-});
+export const UpdateHospitalizationSchema = z
+  .object({
+    id: z.string().min(1),
+    ward: z.string().optional(),
+    room: z.string().optional(),
+    bed: z.string().optional(),
+    admittedAt: z.string().optional(),
+    dischargedAt: z.string().optional(),
+    status: z.enum(["active", "discharged", "planned"]).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === "discharged") {
+      const hasDate = !!(data.dischargedAt && data.dischargedAt.trim());
+      if (!hasDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La date de sortie est requise lorsque le statut est 'discharged'",
+          path: ["dischargedAt"],
+        });
+      }
+    }
+  });
 
 export const SoinSchema = z.object({
   patientId: z.string().min(1),

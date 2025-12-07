@@ -69,6 +69,7 @@ export default async function HospitalizationList() {
                       status: h.status as any,
                       patient_name: name || h.patient_id,
                     }}
+                    isAdmin={isAdmin}
                   />
                 </td>
                 <td className="px-3 py-2">{h.ward || "-"}</td>
