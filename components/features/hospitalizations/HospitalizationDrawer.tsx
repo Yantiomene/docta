@@ -4,6 +4,7 @@ import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 import { updateHospitalizationAction, deleteHospitalizationAction } from "@/lib/actions/hospitalizations";
+import DeleteConfirm from "@/components/features/patients/DeleteConfirm";
 
 type HospitalizationProps = {
   hospitalization: {
@@ -34,6 +35,7 @@ function toLocalInput(value: string | null): string {
 export default function HospitalizationDrawer({ hospitalization, isAdmin = false }: HospitalizationProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"active" | "discharged" | "planned">(hospitalization.status);
+  const deleteFormId = `delete-hosp-${hospitalization.id}`;
 
   return (
     <div>
@@ -101,12 +103,19 @@ export default function HospitalizationDrawer({ hospitalization, isAdmin = false
               </div>
             </form>
             {isAdmin && (
-              <div className="mt-2 flex items-center justify-end">
-                <form action={deleteHospitalizationAction}>
+              <>
+                <form id={deleteFormId} action={deleteHospitalizationAction} className="hidden">
                   <input type="hidden" name="hospitalization_id" value={hospitalization.id} />
-                  <Button type="submit" variant="outline" className="px-2 py-1">Supprimer</Button>
                 </form>
-              </div>
+                <div className="mt-2 flex items-center justify-end">
+                  <DeleteConfirm
+                    formId={deleteFormId}
+                    className="bg-red-600 hover:bg-red-700"
+                    title="Confirmer la suppression"
+                    message="Cette action supprimera définitivement l’hospitalisation. Êtes-vous sûr de vouloir continuer ?"
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
