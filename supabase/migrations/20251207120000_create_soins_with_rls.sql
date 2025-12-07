@@ -1,28 +1,83 @@
--- Create soins table with RLS and staff-only policies
--- Run via Supabase CLI migrations or SQL editor
 
--- Ensure gen_random_uuid() is available
 create extension if not exists pgcrypto;
 
+-- Create table if missing; otherwise, progressively ensure required columns exist
 create table if not exists public.soins (
   id uuid primary key default gen_random_uuid(),
-  patient_id uuid not null references public.patients(id) on delete cascade,
-  title text not null,
+  title text,
   description text,
-  scheduled_at timestamptz not null,
-  assigned_to_nurse_id uuid references public.profiles(id) on delete set null,
-  status text not null check (status in ('scheduled','in_progress','done','missed')),
-  created_at timestamptz not null default now(),
+  scheduled_at timestamptz,
+  status text,
+  created_at timestamptz default now(),
   updated_at timestamptz
 );
 
--- Helpful indexes
-create index if not exists soins_patient_status_idx
-  on public.soins (patient_id, status);
-create index if not exists soins_assigned_nurse_idx
-  on public.soins (assigned_to_nurse_id);
-create index if not exists soins_scheduled_at_idx
-  on public.soins (scheduled_at desc);
+-- Add required columns if they do not exist
+alter table public.soins
+  add column if not exists patient_id uuid,
+  add column if not exists assigned_to_nurse_id uuid,
+  add column if not exists title text,
+  add column if not exists description text,
+  add column if not exists scheduled_at timestamptz,
+  add column if not exists status text,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint c
+    where c.conname = 'soins_patient_fk'
+      and c.conrelid = 'public.soins'::regclass
+  ) then
+    execute 'alter table public.soins add constraint soins_patient_fk foreign key (patient_id) references public.patients(id) on delete cascade';
+  end if;
+  if not exists (
+    select 1 from pg_constraint c
+    where c.conname = 'soins_assigned_nurse_fk'
+      and c.conrelid = 'public.soins'::regclass
+  ) then
+    execute 'alter table public.soins add constraint soins_assigned_nurse_fk foreign key (assigned_to_nurse_id) references public.profiles(id) on delete set null';
+  end if;
+end$$;
+
+-- Ensure status is constrained to expected values (guarded)
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint c
+    where c.conname = 'soins_status_check'
+      and c.conrelid = 'public.soins'::regclass
+  ) then
+    execute 'alter table public.soins add constraint soins_status_check check (status in (''scheduled'',''in_progress'',''done'',''missed''))';
+  end if;
+end$$;
+
+-- Helpful indexes (only if related columns exist)
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'soins' and column_name = 'patient_id'
+  ) and exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'soins' and column_name = 'status'
+  ) then
+    execute 'create index if not exists soins_patient_status_idx on public.soins (patient_id, status)';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'soins' and column_name = 'assigned_to_nurse_id'
+  ) then
+    execute 'create index if not exists soins_assigned_nurse_idx on public.soins (assigned_to_nurse_id)';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'soins' and column_name = 'scheduled_at'
+  ) then
+    execute 'create index if not exists soins_scheduled_at_idx on public.soins (scheduled_at desc)';
+  end if;
+end$$;
 
 -- Maintain updated_at automatically (reuse global helper if present)
 create or replace function public.set_updated_at()
@@ -76,4 +131,3 @@ to authenticated
 using (
   public.has_role(auth.uid(), array['admin'])
 );
-
