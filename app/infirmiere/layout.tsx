@@ -33,6 +33,7 @@ export default function InfirmiereLayout({ children }: { children: React.ReactNo
           <Link href="/infirmiere" className="block hover:underline" title="Dashboard" aria-label="Dashboard"><span className={labelCls}>Dashboard</span></Link>
           <Link href="/infirmiere/soins" className="block hover:underline" title="Soins" aria-label="Soins"><span className={labelCls}>Soins</span></Link>
           <Link href="/infirmiere/patients" className="block hover:underline" title="Patients" aria-label="Patients"><span className={labelCls}>Patients</span></Link>
+          <Link href="/infirmiere/hospitalizations" className="block hover:underline" title="Hospitalisations" aria-label="Hospitalisations"><span className={labelCls}>Hospitalisations</span></Link>
           <Link href="/infirmiere/notifications" className="block hover:underline" title="Notifications" aria-label="Notifications"><span className={labelCls}>Notifications</span></Link>
           <Link href="/infirmiere/planning" className="block hover:underline" title="Planning" aria-label="Planning"><span className={labelCls}>Planning</span></Link>
         </nav>

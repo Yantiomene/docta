@@ -32,6 +32,8 @@ export default function MedecinLayout({ children }: { children: React.ReactNode 
         <nav className="space-y-2">
           <Link href="/medecin" className="block hover:underline" title="Dashboard" aria-label="Dashboard"><span className={labelCls}>Dashboard</span></Link>
           <Link href="/medecin/patients" className="block hover:underline" title="Patients" aria-label="Patients"><span className={labelCls}>Patients</span></Link>
+          <Link href="/medecin/soins" className="block hover:underline" title="Soins" aria-label="Soins"><span className={labelCls}>Soins</span></Link>
+          <Link href="/medecin/hospitalizations" className="block hover:underline" title="Hospitalisations" aria-label="Hospitalisations"><span className={labelCls}>Hospitalisations</span></Link>
           <Link href="/medecin/appointments" className="block hover:underline" title="Appointments" aria-label="Appointments"><span className={labelCls}>Appointments</span></Link>
           <Link href="/medecin/messages" className="block hover:underline" title="Messages" aria-label="Messages"><span className={labelCls}>Messages</span></Link>
           <Link href="/medecin/notifications" className="block hover:underline" title="Notifications" aria-label="Notifications"><span className={labelCls}>Notifications</span></Link>
