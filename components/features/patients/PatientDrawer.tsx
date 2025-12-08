@@ -39,7 +39,16 @@ export default async function PatientDrawer({ patientId, searchParams }: { patie
       <div className="absolute right-0 top-0 h-full w-full max-w-xl bg-white dark:bg-neutral-900 shadow-xl border-l flex flex-col">
         <div className="flex items-center justify-between border-b p-4 shrink-0">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dossier Patient</h2>
-          <a href="/admin/patients" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">Fermer</a>
+          {(() => {
+            const q = searchParams?.q;
+            const base = role === "admin" ? "/admin/patients" : role === "medecin" ? "/medecin/patients" : role === "infirmiere" ? "/infirmiere/patients" : "/";
+            const usp = new URLSearchParams();
+            if (q && typeof q === "string" && q.trim() !== "") usp.set("q", q);
+            const href = usp.toString() ? `${base}?${usp.toString()}` : base;
+            return (
+              <a href={href} className="text-sm text-gray-600 dark:text-gray-300 hover:underline">Fermer</a>
+            );
+          })()}
         </div>
         <div className="flex-1 p-4 space-y-4 overflow-y-auto text-gray-900 dark:text-gray-100">
           {errMsg ? (

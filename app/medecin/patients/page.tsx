@@ -40,7 +40,7 @@ export default async function MedecinPatientsPage({
       {pid ? (
         <PatientDrawer
           patientId={pid}
-          searchParams={{ success, error }}
+          searchParams={{ success, error, q }}
         />
       ) : null}
     </div>

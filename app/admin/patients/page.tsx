@@ -68,6 +68,7 @@ export default async function AdminPatientsPage({
         <PatientDrawer patientId={String(searchParams.pid)} searchParams={{
           success: typeof searchParams?.success === "string" ? String(searchParams.success) : undefined,
           error: typeof searchParams?.error === "string" ? String(searchParams.error) : undefined,
+          q: typeof searchParams?.q === "string" ? String(searchParams.q) : undefined,
         }} />
       ) : null}
     </div>
