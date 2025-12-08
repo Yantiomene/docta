@@ -1,8 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getServerSupabase } from "@/lib/supabaseServer";
 import type { Role } from "@/lib/types";
 import Button from "@/components/ui/button";
 import AuthAwareCTA from "@/components/features/common/AuthAwareCTA";
+
+// Lightweight blur-up placeholder for the hero image
+const HERO_BLUR =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="12"><defs><linearGradient id="g" x1="1" y1="0" x2="0" y2="0"><stop stop-color="#e6f2fb" offset="0"/><stop stop-color="#ffffff" offset="1"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>'
+  );
 
 // Server Component: unified landing for all roles
 export default async function RoleLanding({ role, basePath, showQuickAccess = true, isAuthenticated = false, showHero = true }: { role?: Role | null; basePath?: string | null; showQuickAccess?: boolean; isAuthenticated?: boolean; showHero?: boolean }): Promise<JSX.Element> {
@@ -70,8 +78,19 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
                 <AuthAwareCTA isAuthenticatedServer={isLoggedIn} basePath={basePath ?? undefined} />
               </div>
             </div>
-            <div className="relative w-full">
-      <img src="/abdd9300-450e-5ac1-8d62-d59e6323f431.jpg" alt="Modern hospital room with nurse caring for patient" className="w-full h-auto" />
+            <div className="relative w-full overflow-hidden rounded-xl aspect-[16/9]">
+              <Image
+                src="/abdd9300-450e-5ac1-8d62-d59e6323f431.jpg"
+                alt="Modern hospital room with nurse caring for patient"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                className="object-cover object-left dark:brightness-90"
+                placeholder="blur"
+                blurDataURL={HERO_BLUR}
+              />
+              {/* Soft gradient overlay on the right for text contrast; adapts to dark mode */}
+              <div className="absolute inset-y-0 right-0 w-1/3 md:w-1/2 bg-gradient-to-l from-white/80 to-transparent dark:from-gray-900/60 pointer-events-none" />
             </div>
           </div>
         </section>
