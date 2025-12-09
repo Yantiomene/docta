@@ -17,6 +17,7 @@ export default function AdminSoinsPage({ searchParams }: { searchParams?: { [key
   const end = searchParams?.end ? String(searchParams.end) : "";
   const q = searchParams?.q ? String(searchParams.q) : "";
   const show = searchParams?.show ? String(searchParams.show) : "";
+  const basePath = "/admin/soins";
 
   // Helper to preserve filters while toggling form visibility
   const mkHref = (nextShow?: string) => {
@@ -26,7 +27,7 @@ export default function AdminSoinsPage({ searchParams }: { searchParams?: { [key
     if (q) sp.set("q", q);
     if (nextShow) sp.set("show", nextShow);
     const qs = sp.toString();
-    return qs ? `?${qs}` : "";
+    return `${basePath}${qs ? `?${qs}` : ""}`;
   };
 
   // Load nurses for CSV export select

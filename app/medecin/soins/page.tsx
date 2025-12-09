@@ -16,6 +16,7 @@ export default function MedecinSoinsPage({ searchParams }: { searchParams?: { [k
   const end = searchParams?.end ? String(searchParams.end) : "";
   const q = searchParams?.q ? String(searchParams.q) : "";
   const show = searchParams?.show ? String(searchParams.show) : "";
+  const basePath = "/medecin/soins";
 
   const mkHref = (nextShow?: string) => {
     const sp = new URLSearchParams();
@@ -24,7 +25,7 @@ export default function MedecinSoinsPage({ searchParams }: { searchParams?: { [k
     if (q) sp.set("q", q);
     if (nextShow) sp.set("show", nextShow);
     const qs = sp.toString();
-    return qs ? `?${qs}` : "";
+    return `${basePath}${qs ? `?${qs}` : ""}`;
   };
 
   return (
