@@ -15,6 +15,17 @@ export default function MedecinSoinsPage({ searchParams }: { searchParams?: { [k
   const start = searchParams?.start ? String(searchParams.start) : "";
   const end = searchParams?.end ? String(searchParams.end) : "";
   const q = searchParams?.q ? String(searchParams.q) : "";
+  const show = searchParams?.show ? String(searchParams.show) : "";
+
+  const mkHref = (nextShow?: string) => {
+    const sp = new URLSearchParams();
+    if (start) sp.set("start", start);
+    if (end) sp.set("end", end);
+    if (q) sp.set("q", q);
+    if (nextShow) sp.set("show", nextShow);
+    const qs = sp.toString();
+    return qs ? `?${qs}` : "";
+  };
 
   return (
     <div className="space-y-6">
@@ -25,6 +36,12 @@ export default function MedecinSoinsPage({ searchParams }: { searchParams?: { [k
         </div>
       )}
       <StatusToast message={message} />
+      <div className="flex flex-wrap gap-2">
+        <a href={mkHref("create")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition bg-primary text-white hover:bg-primary/90 px-3 py-2">Créer un soin</a>
+        {show && (
+          <a href={mkHref(undefined)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition border border-muted text-foreground hover:bg-muted px-3 py-2">Fermer le formulaire</a>
+        )}
+      </div>
       <div className="rounded-lg border p-3">
         <form method="GET" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div>
@@ -44,7 +61,7 @@ export default function MedecinSoinsPage({ searchParams }: { searchParams?: { [k
           </div>
         </form>
       </div>
-      <SoinForm />
+      {show === "create" && <SoinForm />}
       {/* Médecin: voir l’ensemble des soins (non filtré par infirmière) */}
       <SoinList scope="admin" filters={{ start, end, q }} />
     </div>

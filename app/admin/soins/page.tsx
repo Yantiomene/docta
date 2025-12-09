@@ -16,6 +16,18 @@ export default function AdminSoinsPage({ searchParams }: { searchParams?: { [key
   const start = searchParams?.start ? String(searchParams.start) : "";
   const end = searchParams?.end ? String(searchParams.end) : "";
   const q = searchParams?.q ? String(searchParams.q) : "";
+  const show = searchParams?.show ? String(searchParams.show) : "";
+
+  // Helper to preserve filters while toggling form visibility
+  const mkHref = (nextShow?: string) => {
+    const sp = new URLSearchParams();
+    if (start) sp.set("start", start);
+    if (end) sp.set("end", end);
+    if (q) sp.set("q", q);
+    if (nextShow) sp.set("show", nextShow);
+    const qs = sp.toString();
+    return qs ? `?${qs}` : "";
+  };
 
   // Load nurses for CSV export select
   // Note: Server Component, safe to fetch here
@@ -47,6 +59,14 @@ export default function AdminSoinsPage({ searchParams }: { searchParams?: { [key
         </div>
       )}
       <StatusToast message={message} />
+      {/* Actions: open forms on demand */}
+      <div className="flex flex-wrap gap-2">
+        <a href={mkHref("create")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition bg-primary text-white hover:bg-primary/90 px-3 py-2">Créer un soin</a>
+        <a href={mkHref("export")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition bg-primary text-white hover:bg-primary/90 px-3 py-2">Exporter les soins</a>
+        {show && (
+          <a href={mkHref(undefined)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition border border-muted text-foreground hover:bg-muted px-3 py-2">Fermer les formulaires</a>
+        )}
+      </div>
       <div className="rounded-lg border p-3">
         <form method="GET" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div>
@@ -65,23 +85,25 @@ export default function AdminSoinsPage({ searchParams }: { searchParams?: { [key
             <Button type="submit">Filtrer</Button>
           </div>
         </form>
-        <div className="mt-4">
-          <form method="GET" action="/admin/soins/export" className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
-            <div>
-              <label className="text-sm">Jour</label>
-              <Input type="date" name="date" defaultValue={start} required />
-            </div>
-            <div className="sm:col-span-3">
-              <label className="text-sm">Infirmière</label>
-              <NursesSelect />
-            </div>
-            <div className="sm:col-span-1 flex justify-end">
-              <Button type="submit">Exporter CSV</Button>
-            </div>
-          </form>
-        </div>
+        {show === "export" && (
+          <div className="mt-4">
+            <form method="GET" action="/admin/soins/export" className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+              <div>
+                <label className="text-sm">Jour</label>
+                <Input type="date" name="date" defaultValue={start} required />
+              </div>
+              <div className="sm:col-span-3">
+                <label className="text-sm">Infirmière</label>
+                <NursesSelect />
+              </div>
+              <div className="sm:col-span-1 flex justify-end">
+                <Button type="submit">Exporter CSV</Button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
-      <SoinForm />
+      {show === "create" && <SoinForm />}
       <SoinList scope="admin" filters={{ start, end, q }} />
     </div>
   );
