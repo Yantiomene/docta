@@ -4,6 +4,18 @@ import { redirect } from "next/navigation";
 import { SoinSchema } from "@/lib/schemas";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 
+// Helper: derive HH:MM:SS from a datetime-local string
+function extractHeurePrevue(scheduledAt: string): string {
+  if (!scheduledAt) return "00:00:00";
+  const m = scheduledAt.match(/T(\d{2}:\d{2})/);
+  if (m && m[1]) return `${m[1]}:00`;
+  try {
+    return new Date(scheduledAt).toISOString().slice(11, 19);
+  } catch {
+    return "00:00:00";
+  }
+}
+
 // Create a soin (staff-only: admin, medecin, infirmiere)
 export async function createSoinAction(formData: FormData) {
   const supabase = getServerSupabase();
@@ -74,12 +86,16 @@ export async function createSoinAction(formData: FormData) {
     .sort((a, b) => b.admitted_at.getTime() - a.admitted_at.getTime())[0];
   const hospitalisationId = selectedHosp?.id;
 
+  // Compute heure_prevue from scheduledAt (NOT NULL in DB)
+  const heurePrevue = extractHeurePrevue(scheduledAt);
+
   const payload = {
     patient_id: patientId,
     type_soin: typeSoin || title || "Autre",
     title,
     description: description ?? "",
     scheduled_at: scheduledAt,
+    heure_prevue: heurePrevue,
     assigned_to_nurse_id: assignedToNurseId ?? null,
     status,
     hospitalisation_id: hospitalisationId,
