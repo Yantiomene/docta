@@ -30,16 +30,17 @@ export async function GET(request: Request) {
   const patientIds = Array.from(new Set(rows.map((r: any) => r.patient_id)));
   const nurseIds = Array.from(new Set(rows.map((r: any) => r.assigned_to_nurse_id).filter(Boolean)));
 
+  const hospIds = Array.from(new Set(rows.map((r: any) => r.hospitalisation_id).filter(Boolean)));
   const { data: hospRows } = await supabase
-    .from("hospitalizations")
-    .select("patient_id, ward, bed, status, admitted_at, discharged_at")
-    .in("patient_id", patientIds);
+    .from("hospitalisations")
+    .select("id, service, lit, statut, date_admission, date_sortie_reelle")
+    .in("id", hospIds);
   const hospMap: Record<string, { ward?: string | null; bed?: string | null }> = {};
   (hospRows || []).forEach((h: any) => {
-    const key = h.patient_id as string;
+    const key = h.id as string;
     const prev = hospMap[key];
-    const isBetter = !prev || h.status === "active";
-    if (isBetter) hospMap[key] = { ward: h.ward ?? null, bed: h.bed ?? null };
+    const isBetter = !prev || String(h.statut) === "en_cours";
+    if (isBetter) hospMap[key] = { ward: h.service ?? null, bed: h.lit ?? null };
   });
 
   const { data: nurses } = await supabase
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
   const header = ["patient_name", "title", "description", "scheduled_at", "ward", "bed", "nurse_name"].join(",");
   const lines = rows.map((r: any) => {
     const patientName = `${r.patients?.first_name ?? ""} ${r.patients?.last_name ?? ""}`.trim();
-    const h = hospMap[r.patient_id] || { ward: "", bed: "" };
+    const h = hospMap[r.hospitalisation_id] || { ward: "", bed: "" };
     const nurseName = r.assigned_to_nurse_id ? nurseMap[r.assigned_to_nurse_id] ?? "" : "";
     const vals = [
       patientName,
@@ -84,4 +85,3 @@ export async function GET(request: Request) {
     },
   });
 }
-

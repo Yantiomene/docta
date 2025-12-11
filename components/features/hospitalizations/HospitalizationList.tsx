@@ -18,11 +18,9 @@ export default async function HospitalizationList() {
     isAdmin = String(me?.role || "").toLowerCase() === "admin";
   }
   const { data, error } = await supabase
-    .from("hospitalizations")
-    .select(
-      "id, patient_id, ward, room, bed, admitted_at, discharged_at, status, patients:patient_id (first_name, last_name)"
-    )
-    .order("admitted_at", { ascending: false });
+    .from("hospitalisations")
+    .select("id, dossier_patient_id, service, chambre, lit, date_admission, date_sortie_reelle, statut")
+    .order("date_admission", { ascending: false });
 
   if (error) {
     return (
@@ -30,7 +28,31 @@ export default async function HospitalizationList() {
     );
   }
 
-  const rows = data ?? [];
+  const rows = (data ?? []) as any[];
+
+  const dossierIds = Array.from(new Set(rows.map((h: any) => h.dossier_patient_id).filter(Boolean)));
+  let dossierToProfileId: Record<string, string> = {};
+  let profileMap: Record<string, { nom?: string | null; prenom?: string | null }> = {};
+  if (dossierIds.length > 0) {
+    const service = getServiceSupabase();
+    const { data: dossiers } = await service
+      .from("dossiers_patients")
+      .select("id, patient_id")
+      .in("id", dossierIds);
+    (dossiers || []).forEach((d: any) => {
+      if (d.id && d.patient_id) dossierToProfileId[d.id] = d.patient_id;
+    });
+    const profileIds = Array.from(new Set(Object.values(dossierToProfileId)));
+    if (profileIds.length > 0) {
+      const { data: profiles } = await service
+        .from("profiles")
+        .select("id, nom, prenom")
+        .in("id", profileIds);
+      (profiles || []).forEach((p: any) => {
+        profileMap[p.id] = { nom: p.nom ?? null, prenom: p.prenom ?? null };
+      });
+    }
+  }
 
   if (!rows.length) {
     return <div className="text-sm text-muted-foreground">Aucune hospitalisation</div>;
@@ -53,34 +75,38 @@ export default async function HospitalizationList() {
         </thead>
         <tbody>
           {rows.map((h) => {
-            const patient = (h as any).patients as { first_name?: string; last_name?: string } | null;
-            const name = patient ? `${patient.first_name ?? ""} ${patient.last_name ?? ""}`.trim() : h.patient_id;
+            const dossiersPatientId = (h as any).dossier_patient_id as string | undefined;
+            const profId = dossiersPatientId ? dossierToProfileId[dossiersPatientId] : undefined;
+            const prof = profId ? profileMap[profId] : undefined;
+            const name = prof ? `${prof.nom ?? ""} ${prof.prenom ?? ""}`.trim() : "";
+            const statutFr = String((h as any).statut || "");
+            const status = statutFr === "en_cours" ? "active" : statutFr === "sortie" ? "discharged" : "planned";
             return (
               <tr key={h.id} className="border-t border-muted">
                 <td className="px-3 py-2">
                   <HospitalizationDrawer
                     hospitalization={{
                       id: h.id,
-                      ward: h.ward ?? null,
-                      room: h.room ?? null,
-                      bed: h.bed ?? null,
-                      admitted_at: h.admitted_at,
-                      discharged_at: h.discharged_at ?? null,
-                      status: h.status as any,
-                      patient_name: name || h.patient_id,
+                      ward: h.service ?? null,
+                      room: h.chambre ?? null,
+                      bed: h.lit ?? null,
+                      admitted_at: h.date_admission,
+                      discharged_at: h.date_sortie_reelle ?? null,
+                      status: status as any,
+                      patient_name: name || String(h.dossier_patient_id),
                     }}
                     isAdmin={isAdmin}
                   />
                 </td>
-                <td className="px-3 py-2">{h.ward || "-"}</td>
-                <td className="px-3 py-2">{h.room || "-"}</td>
-                <td className="px-3 py-2">{h.bed || "-"}</td>
-                <td className="px-3 py-2">{new Date(h.admitted_at).toLocaleString()}</td>
-                <td className="px-3 py-2">{h.discharged_at ? new Date(h.discharged_at).toLocaleString() : "-"}</td>
-                <td className="px-3 py-2">{h.status}</td>
+                <td className="px-3 py-2">{h.service || "-"}</td>
+                <td className="px-3 py-2">{h.chambre || "-"}</td>
+                <td className="px-3 py-2">{h.lit || "-"}</td>
+                <td className="px-3 py-2">{new Date(h.date_admission).toLocaleString()}</td>
+                <td className="px-3 py-2">{h.date_sortie_reelle ? new Date(h.date_sortie_reelle).toLocaleString() : "-"}</td>
+                <td className="px-3 py-2">{status}</td>
                 <td className="px-3 py-2">
                   <div className="flex items-center justify-end gap-2">
-                    {h.status !== "discharged" && (
+                    {status !== "discharged" && (
                       <form action={dischargeHospitalizationAction}>
                         <input type="hidden" name="hospitalization_id" value={h.id} />
                         <Button type="submit" className="px-2 py-1">Sortir</Button>

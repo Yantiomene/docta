@@ -9,14 +9,17 @@ type PatientRow = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  user_id?: string | null;
 };
 
 export default function PatientAutocomplete({
   name = "patientId",
   label = "Nom du patient",
+  requireLinkedProfile = false,
 }: {
   name?: string;
   label?: string;
+  requireLinkedProfile?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,12 +40,16 @@ export default function PatientAutocomplete({
       try {
         if (abortRef.current) abortRef.current.abort();
         abortRef.current = new AbortController();
-        const { data, error } = await supabase
+        let req = supabase
           .from("patients")
-          .select("id, first_name, last_name, email")
+          .select("id, first_name, last_name, email, user_id")
           .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`)
           .order("last_name", { ascending: true })
           .limit(8);
+        if (requireLinkedProfile) {
+          req = req.not("user_id", "is", null);
+        }
+        const { data, error } = await req;
         if (error) {
           console.error("Patient search error", error.message);
           setResults([]);

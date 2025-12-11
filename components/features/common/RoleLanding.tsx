@@ -28,7 +28,7 @@ export default async function RoleLanding({ role, basePath, showQuickAccess = tr
 
   const [patientsCount, hospCount, soinsCount, apptCount, notifCount] = await Promise.all([
     safeCount("patients"),
-    safeCount("hospitalizations"),
+    safeCount("hospitalisations"),
     safeCount("soins"),
     safeCount("appointments"),
     safeCount("notifications"),

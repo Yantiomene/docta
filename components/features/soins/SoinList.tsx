@@ -106,24 +106,23 @@ export default async function SoinList({ scope = "infirmiere", filters }: { scop
   }
 
   // Fetch hospitalization (ward/bed) for patients present
-  const patientIds = Array.from(new Set(soins.map((s) => s.patient_id).filter(Boolean)));
+  const hospIds = Array.from(new Set(soins.map((s: any) => s.hospitalisation_id).filter(Boolean)));
   let hosps: Record<string, { ward?: string | null; bed?: string | null }> = {};
-  if (patientIds.length > 0) {
+  if (hospIds.length > 0) {
     const { data: hospRows } = await supabase
-      .from("hospitalizations")
-      .select("patient_id, ward, bed, status, admitted_at, discharged_at")
-      .in("patient_id", patientIds);
+      .from("hospitalisations")
+      .select("id, service, lit, statut, date_admission, date_sortie_reelle")
+      .in("id", hospIds);
     (hospRows || []).forEach((h: any) => {
-      // Prefer active; fallback to planned; pick the most recent admitted_at
-      const key = h.patient_id as string;
+      const key = h.id as string;
       const prev = hosps[key];
-      const isBetter = !prev || h.status === "active";
-      if (isBetter) hosps[key] = { ward: h.ward ?? null, bed: h.bed ?? null };
+      const isBetter = !prev || String(h.statut) === "en_cours";
+      if (isBetter) hosps[key] = { ward: h.service ?? null, bed: h.lit ?? null };
     });
   }
 
   // Fetch nurse names for assigned_to_nurse_id
-  const nurseIds = Array.from(new Set(soins.map((s) => s.assigned_to_nurse_id).filter(Boolean))) as string[];
+  const nurseIds = Array.from(new Set(soins.map((s: any) => s.assigned_to_nurse_id).filter(Boolean))) as string[];
   const nurseMap: Record<string, { nom?: string; prenom?: string }> = {};
   if (nurseIds.length > 0) {
     const { data: nurses } = await getServiceSupabase()
@@ -160,7 +159,7 @@ export default async function SoinList({ scope = "infirmiere", filters }: { scop
                 <td className="px-3 py-2">{formatDate(s.scheduled_at)}</td>
                 <td className="px-3 py-2">
                   {(() => {
-                    const h = hosps[s.patient_id] || { ward: null, bed: null };
+                    const h = hosps[(s as any).hospitalisation_id] || { ward: null, bed: null };
                     const ward = h.ward || "-";
                     const bed = h.bed || "-";
                     return (

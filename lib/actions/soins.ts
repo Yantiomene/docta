@@ -72,25 +72,44 @@ export async function createSoinAction(formData: FormData) {
   }
 
   const { data: hosps, error: hospErr } = await supabase
-    .from("hospitalizations")
-    .select("id, admitted_at, discharged_at, status")
-    .eq("patient_id", patientId)
-    .or("status.eq.active,status.eq.planned");
+    .from("patients")
+    .select("user_id")
+    .eq("id", patientId)
+    .maybeSingle();
   if (hospErr) {
     redirect(`${basePath}?error=${encodeURIComponent(hospErr.message)}`);
   }
-  const matchingHosps = (hosps || []).filter((h) => {
-    const admitted = new Date((h as any).admitted_at);
-    const dischargedRaw = (h as any).discharged_at as string | null;
+  const profileId = (hosps as any)?.user_id as string | undefined;
+  if (!profileId) {
+    redirect(`${basePath}?error=${encodeURIComponent("Patient non lié à un profil utilisateur")}`);
+  }
+  const { data: dossiers, error: dossierErr } = await getServiceSupabase()
+    .from("dossiers_patients")
+    .select("id")
+    .eq("patient_id", profileId);
+  if (dossierErr) {
+    redirect(`${basePath}?error=${encodeURIComponent(dossierErr.message)}`);
+  }
+  const dossierIds = (dossiers || []).map((d: any) => d.id);
+  const { data: hospRows, error: hospFetchErr } = await getServiceSupabase()
+    .from("hospitalisations")
+    .select("id, date_admission, date_sortie_reelle, statut, dossier_patient_id")
+    .in("dossier_patient_id", dossierIds.length ? dossierIds : ["00000000-0000-0000-0000-000000000000"]);
+  if (hospFetchErr) {
+    redirect(`${basePath}?error=${encodeURIComponent(hospFetchErr.message)}`);
+  }
+  const matchingHosps = (hospRows || []).filter((h: any) => {
+    const admitted = new Date(h.date_admission as string);
+    const dischargedRaw = h.date_sortie_reelle as string | null;
     const discharged = dischargedRaw ? new Date(dischargedRaw) : null;
-    const status = String((h as any).status || "");
+    const statut = String(h.statut || "");
     if (isNaN(admitted.getTime())) return false;
     const withinStay = discharged ? scheduled >= admitted && scheduled <= discharged : scheduled >= admitted;
-    const statusOk = status === "active" || status === "planned";
+    const statusOk = statut === "en_cours";
     return statusOk && withinStay;
   });
   if (!matchingHosps || matchingHosps.length === 0) {
-    redirect(`${basePath}?error=${encodeURIComponent("Le patient n'est pas hospitalisé à la date prévue")}`);
+    redirect(`${basePath}?error=${encodeURIComponent("Patient non hospitalisé (statut actif) à la date prévue")}`);
   }
   // Choisir l’hospitalisation la plus pertinente (la plus récente avant la date planifiée)
   const selectedHosp = matchingHosps
@@ -100,16 +119,25 @@ export async function createSoinAction(formData: FormData) {
 
   // Verify FK target exists (defensive against drift/mismatch)
   if (hospitalisationId) {
-    const { data: fkHosp } = await getServiceSupabase()
-      .from("hospitalizations")
-      .select("id, patient_id")
+    const { data: fkHosp, error: fkHospErr } = await getServiceSupabase()
+      .from("hospitalisations")
+      .select("id, dossier_patient_id")
       .eq("id", hospitalisationId)
       .maybeSingle();
-    if (!fkHosp || !fkHosp.id) {
+    if (fkHospErr || !fkHosp || !fkHosp.id) {
       redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation introuvable pour l’ID sélectionné")}`);
     }
-    // Optional: ensure same patient to avoid semantic mismatches
-    if (fkHosp.patient_id !== patientId) {
+    const { data: dossier } = await getServiceSupabase()
+      .from("dossiers_patients")
+      .select("patient_id")
+      .eq("id", fkHosp.dossier_patient_id)
+      .maybeSingle();
+    const { data: patientRow } = await getServiceSupabase()
+      .from("patients")
+      .select("user_id")
+      .eq("id", patientId)
+      .maybeSingle();
+    if (!dossier || !patientRow || !dossier.patient_id || !patientRow.user_id || dossier.patient_id !== patientRow.user_id) {
       redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation et patient ne correspondent pas")}`);
     }
   }

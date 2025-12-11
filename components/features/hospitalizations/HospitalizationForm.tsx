@@ -7,7 +7,7 @@ import PatientAutocomplete from "@/components/features/patients/PatientAutocompl
 export default function HospitalizationForm() {
   return (
     <form action={createHospitalizationAction} className="space-y-3">
-      <PatientAutocomplete name="patientId" label="Nom du patient" />
+      <PatientAutocomplete name="patientId" label="Nom du patient" requireLinkedProfile />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label className="text-sm text-foreground">Service</label>
@@ -40,6 +40,9 @@ export default function HospitalizationForm() {
         </Select>
       </div>
       <Button type="submit">Créer l'hospitalisation</Button>
+      <p className="text-xs text-muted-foreground">
+        Remarque: sélectionnez un patient lié à un compte utilisateur. Pour lier un patient, utilisez la page Administration &gt; Patients.
+      </p>
     </form>
   );
 }
