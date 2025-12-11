@@ -96,7 +96,23 @@ export async function createSoinAction(formData: FormData) {
   const selectedHosp = matchingHosps
     .map((h: any) => ({ id: h.id as string, admitted_at: new Date(h.admitted_at as string) }))
     .sort((a, b) => b.admitted_at.getTime() - a.admitted_at.getTime())[0];
-  const hospitalisationId = selectedHosp?.id;
+  let hospitalisationId = selectedHosp?.id;
+
+  // Verify FK target exists (defensive against drift/mismatch)
+  if (hospitalisationId) {
+    const { data: fkHosp } = await getServiceSupabase()
+      .from("hospitalizations")
+      .select("id, patient_id")
+      .eq("id", hospitalisationId)
+      .maybeSingle();
+    if (!fkHosp || !fkHosp.id) {
+      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation introuvable pour l’ID sélectionné")}`);
+    }
+    // Optional: ensure same patient to avoid semantic mismatches
+    if (fkHosp.patient_id !== patientId) {
+      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation et patient ne correspondent pas")}`);
+    }
+  }
 
   // Compute heure_prevue from scheduledAt (NOT NULL in DB)
   const heurePrevue = extractHeurePrevue(scheduledAt);
