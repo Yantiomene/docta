@@ -36,6 +36,17 @@ export default async function SoinForm() {
     "Hygiène",
     "Changement de sonde",
   ];
+  const typeOptions = [
+    "Pansement",
+    "Injection",
+    "Perfusion",
+    "Hygiène",
+    "Prise de tension",
+    "Glycémie",
+    "Médication",
+    "Toilette",
+    "Autre",
+  ];
 
   return (
     <div className="rounded-lg border p-4 space-y-4">
@@ -43,6 +54,15 @@ export default async function SoinForm() {
       <form action={createSoinAction} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <PatientAutocomplete name="patientId" label="Patient" />
+        </div>
+
+        <div>
+          <label className="text-sm text-foreground">Type de soin</label>
+          <Select name="typeSoin" defaultValue={typeOptions[0]} className="w-full" required>
+            {typeOptions.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </Select>
         </div>
 
         <div className="sm:col-span-2">

@@ -70,6 +70,7 @@ export const UpdateHospitalizationSchema = z
 
 export const SoinSchema = z.object({
   patientId: z.string().min(1),
+  typeSoin: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional(),
   scheduledAt: z.string().min(1),

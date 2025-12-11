@@ -27,6 +27,7 @@ export async function createSoinAction(formData: FormData) {
 
   // Extract fields
   const patientId = (formData.get("patientId") || "").toString().trim();
+  const typeSoin = (formData.get("typeSoin") || "").toString().trim();
   const title = (formData.get("title") || "").toString().trim();
   const description = (formData.get("description") || "").toString().trim() || undefined;
   const scheduledAt = (formData.get("scheduledAt") || "").toString().trim();
@@ -34,7 +35,7 @@ export async function createSoinAction(formData: FormData) {
   const statusRaw = (formData.get("status") || "").toString().trim() || "scheduled";
   const status = statusRaw as "scheduled" | "in_progress" | "done" | "missed";
 
-  const parsed = SoinSchema.safeParse({ patientId, title, description, scheduledAt, assignedToNurseId, status });
+  const parsed = SoinSchema.safeParse({ patientId, typeSoin, title, description, scheduledAt, assignedToNurseId, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     redirect(`${basePath}?error=${encodeURIComponent(msg)}`);
@@ -75,6 +76,7 @@ export async function createSoinAction(formData: FormData) {
 
   const payload = {
     patient_id: patientId,
+    type_soin: typeSoin || title || "Autre",
     title,
     description: description ?? null,
     scheduled_at: scheduledAt,
