@@ -78,7 +78,7 @@ export async function createSoinAction(formData: FormData) {
     patient_id: patientId,
     type_soin: typeSoin || title || "Autre",
     title,
-    description: description ?? null,
+    description: description ?? "",
     scheduled_at: scheduledAt,
     assigned_to_nurse_id: assignedToNurseId ?? null,
     status,
