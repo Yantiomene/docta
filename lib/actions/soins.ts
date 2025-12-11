@@ -16,6 +16,18 @@ function extractHeurePrevue(scheduledAt: string): string {
   }
 }
 
+// Helper: derive YYYY-MM-DD (date) from a datetime-local string
+function extractDateDebut(scheduledAt: string): string {
+  if (!scheduledAt) return new Date().toISOString().slice(0, 10);
+  const parts = scheduledAt.split("T");
+  if (parts[0]) return parts[0];
+  try {
+    return new Date(scheduledAt).toISOString().slice(0, 10);
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
 // Create a soin (staff-only: admin, medecin, infirmiere)
 export async function createSoinAction(formData: FormData) {
   const supabase = getServerSupabase();
@@ -88,6 +100,7 @@ export async function createSoinAction(formData: FormData) {
 
   // Compute heure_prevue from scheduledAt (NOT NULL in DB)
   const heurePrevue = extractHeurePrevue(scheduledAt);
+  const dateDebut = extractDateDebut(scheduledAt);
 
   const payload = {
     patient_id: patientId,
@@ -95,6 +108,7 @@ export async function createSoinAction(formData: FormData) {
     title,
     description: description ?? "",
     scheduled_at: scheduledAt,
+    date_debut: dateDebut,
     heure_prevue: heurePrevue,
     assigned_to_nurse_id: assignedToNurseId ?? null,
     status,
