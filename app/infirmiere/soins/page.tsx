@@ -43,6 +43,7 @@ export default function InfirmiereSoinsPage({ searchParams }: { searchParams?: {
           <a href={mkHref(undefined)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition border border-muted text-foreground hover:bg-muted px-3 py-2">Fermer le formulaire</a>
         )}
       </div>
+      {show === "create" && <SoinForm />}
       <div className="rounded-lg border p-3">
         <form method="GET" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div>
@@ -62,7 +63,6 @@ export default function InfirmiereSoinsPage({ searchParams }: { searchParams?: {
           </div>
         </form>
       </div>
-      {show === "create" && <SoinForm />}
       <SoinList scope="infirmiere" filters={{ start, end, q }} />
     </div>
   );

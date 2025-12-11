@@ -19,9 +19,10 @@ export async function createSoinAction(formData: FormData) {
     .eq("id", currentUser!.id)
     .maybeSingle();
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
+  const basePath = role === "admin" ? "/admin/soins" : role === "medecin" ? "/medecin/soins" : "/infirmiere/soins";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/infirmiere/soins?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+    redirect(`${basePath}?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
   }
 
   // Extract fields
@@ -36,13 +37,13 @@ export async function createSoinAction(formData: FormData) {
   const parsed = SoinSchema.safeParse({ patientId, title, description, scheduledAt, assignedToNurseId, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
-    redirect(`/infirmiere/soins?error=${encodeURIComponent(msg)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(msg)}`);
   }
 
   // Validate that the patient is hospitalized at the scheduled time
   const scheduled = new Date(scheduledAt);
   if (isNaN(scheduled.getTime())) {
-    redirect(`/infirmiere/soins?error=${encodeURIComponent("Date/heure planifiées invalides")}`);
+    redirect(`${basePath}?error=${encodeURIComponent("Date/heure planifiées invalides")}`);
   }
 
   const { data: hosps, error: hospErr } = await supabase
@@ -51,9 +52,9 @@ export async function createSoinAction(formData: FormData) {
     .eq("patient_id", patientId)
     .or("status.eq.active,status.eq.planned");
   if (hospErr) {
-    redirect(`/infirmiere/soins?error=${encodeURIComponent(hospErr.message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(hospErr.message)}`);
   }
-  const isHospitalized = (hosps || []).some((h) => {
+  const matchingHosps = (hosps || []).filter((h) => {
     const admitted = new Date((h as any).admitted_at);
     const dischargedRaw = (h as any).discharged_at as string | null;
     const discharged = dischargedRaw ? new Date(dischargedRaw) : null;
@@ -63,9 +64,14 @@ export async function createSoinAction(formData: FormData) {
     const statusOk = status === "active" || status === "planned";
     return statusOk && withinStay;
   });
-  if (!isHospitalized) {
-    redirect(`/infirmiere/soins?error=${encodeURIComponent("Le patient n'est pas hospitalisé à la date prévue")}`);
+  if (!matchingHosps || matchingHosps.length === 0) {
+    redirect(`${basePath}?error=${encodeURIComponent("Le patient n'est pas hospitalisé à la date prévue")}`);
   }
+  // Choisir l’hospitalisation la plus pertinente (la plus récente avant la date planifiée)
+  const selectedHosp = matchingHosps
+    .map((h: any) => ({ id: h.id as string, admitted_at: new Date(h.admitted_at as string) }))
+    .sort((a, b) => b.admitted_at.getTime() - a.admitted_at.getTime())[0];
+  const hospitalisationId = selectedHosp?.id;
 
   const payload = {
     patient_id: patientId,
@@ -74,14 +80,15 @@ export async function createSoinAction(formData: FormData) {
     scheduled_at: scheduledAt,
     assigned_to_nurse_id: assignedToNurseId ?? null,
     status,
+    hospitalisation_id: hospitalisationId,
     created_at: new Date().toISOString(),
   } as const;
 
   const { error } = await supabase.from("soins").insert(payload);
   if (error) {
-    redirect(`/infirmiere/soins?error=${encodeURIComponent(error.message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/infirmiere/soins?success=${encodeURIComponent("Soin créé")}`);
+  redirect(`${basePath}?success=${encodeURIComponent("Soin créé")}`);
 }
 
 // Update a soin's status (staff-only)
