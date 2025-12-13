@@ -74,7 +74,7 @@ export async function createSoinAction(formData: FormData) {
   const { data: hospRows, error: hospFetchErr } = await getServiceSupabase()
     .from("hospitalisations")
     .select("id, date_admission, date_sortie_reelle, statut, dossier_patient_id, patient_id")
-    .or(`patient_id.eq.${patientId},dossier_patient_id.is.notnull`);
+    .eq("patient_id", patientId);
   if (hospFetchErr) {
     redirect(`${basePath}?error=${encodeURIComponent(hospFetchErr.message)}`);
   }
@@ -89,11 +89,19 @@ export async function createSoinAction(formData: FormData) {
     return statusOk && withinStay;
   });
   if (!matchingHosps || matchingHosps.length === 0) {
-    redirect(`${basePath}?error=${encodeURIComponent("Patient non hospitalisé (statut actif) à la date prévue")}`);
+    const { data: patient } = await getServiceSupabase()
+      .from("patients")
+      .select("first_name, last_name")
+      .eq("id", patientId)
+      .maybeSingle();
+    const name = patient ? `${patient.last_name ?? ""} ${patient.first_name ?? ""}`.trim() : patientId;
+    const when = scheduled.toLocaleString();
+    const msg = `Aucune hospitalisation active pour ${name} à ${when}`;
+    redirect(`${basePath}?error=${encodeURIComponent(msg)}`);
   }
   // Choisir l’hospitalisation la plus pertinente (la plus récente avant la date planifiée)
   const selectedHosp = matchingHosps
-    .map((h: any) => ({ id: h.id as string, admitted_at: new Date(h.admitted_at as string) }))
+    .map((h: any) => ({ id: h.id as string, admitted_at: new Date(h.date_admission as string) }))
     .sort((a, b) => b.admitted_at.getTime() - a.admitted_at.getTime())[0];
   let hospitalisationId = selectedHosp?.id;
 
@@ -130,7 +138,7 @@ export async function createSoinAction(formData: FormData) {
     created_at: new Date().toISOString(),
   } as const;
 
-  const { error } = await supabase.from("soins").insert(payload);
+  const { error } = await getServiceSupabase().from("soins").insert(payload);
   if (error) {
     redirect(`${basePath}?error=${encodeURIComponent(error.message)}`);
   }
@@ -165,7 +173,7 @@ export async function updateSoinStatusAction(formData: FormData) {
   }
 
   const now = new Date().toISOString();
-  const { error } = await supabase
+  const { error } = await getServiceSupabase()
     .from("soins")
     .update({ status, updated_at: now })
     .eq("id", id);
@@ -198,7 +206,7 @@ export async function deleteSoinAction(formData: FormData) {
     redirect(`/infirmiere/soins?error=${encodeURIComponent("Soin ID manquant")}`);
   }
 
-  const { error } = await supabase.from("soins").delete().eq("id", id);
+  const { error } = await getServiceSupabase().from("soins").delete().eq("id", id);
   if (error) {
     redirect(`/infirmiere/soins?error=${encodeURIComponent(error.message)}`);
   }
