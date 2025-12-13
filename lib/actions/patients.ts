@@ -97,7 +97,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
   const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender, bloodType });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Invalid fields";
-    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(msg)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(msg)}&form=open`);
   }
 
   const basePayload = {
@@ -126,7 +126,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
         .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
         .eq("id", byUser.id);
       if (error) {
-        redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
+        redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}&form=open`);
       }
       redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié et mis à jour")}`);
     }
@@ -148,7 +148,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
             .eq("phone", phone)
             .maybeSingle();
           if (byPhone && byPhone.id !== byEmail.id) {
-            redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Conflit: email et téléphone appartiennent à deux dossiers différents.")}`);
+            redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Conflit: email et téléphone appartiennent à deux dossiers différents.")}&form=open`);
           }
         }
         const { error } = await supabase
@@ -156,7 +156,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
           .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
           .eq("id", byEmail.id);
         if (error) {
-          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
+          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}&form=open`);
         }
         redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
       }
@@ -174,7 +174,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
           .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
           .eq("id", byPhone.id);
         if (error) {
-          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
+          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}&form=open`);
         }
         redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
       }
@@ -185,7 +185,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
       .from("patients")
       .insert({ ...basePayload, user_id: selectedUserId, created_at: new Date().toISOString() });
     if (error) {
-      redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
+      redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}&form=open`);
     }
     redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier créé et lié au compte utilisateur")}`);
   }
@@ -203,7 +203,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
     error = res.error;
   }
   if (error) {
-    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}&form=open`);
   }
   redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier créé (sans compte)")}`);
 }

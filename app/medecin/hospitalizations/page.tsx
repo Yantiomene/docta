@@ -5,11 +5,12 @@ import TogglePanel from "@/components/features/common/TogglePanel";
 export default function MedecinHospitalizationsPage({
   searchParams,
 }: {
-  searchParams?: { success?: string; error?: string; ts?: string };
+  searchParams?: { success?: string; error?: string; ts?: string; form?: string };
 }) {
   const success = searchParams?.success;
   const error = searchParams?.error;
   const ts = searchParams?.ts;
+  const formOpen = String(searchParams?.form || "") === "open";
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,7 @@ export default function MedecinHospitalizationsPage({
 
       <div>
         <h2 className="text-lg font-medium mb-2">Nouvelle hospitalisation</h2>
-        <TogglePanel buttonLabel="Créer une hospitalisation">
+        <TogglePanel buttonLabel="Créer une hospitalisation" defaultOpen={formOpen}>
           <HospitalizationForm key={ts ?? "form"} />
         </TogglePanel>
       </div>

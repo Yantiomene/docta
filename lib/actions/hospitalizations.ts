@@ -39,7 +39,7 @@ export async function createHospitalizationAction(formData: FormData) {
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     const ts = Date.now();
-    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}&form=open`);
   }
 
   const svc = getServiceSupabase();
@@ -96,7 +96,7 @@ export async function createHospitalizationAction(formData: FormData) {
   const { error } = await svc.from("hospitalisations").insert(payload);
   if (error) {
     const ts = Date.now();
-    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}&form=open`);
   }
   const ts = Date.now();
   redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?success=${encodeURIComponent("Hospitalisation créée")}&ts=${ts}`);

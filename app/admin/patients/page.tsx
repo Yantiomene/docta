@@ -45,6 +45,7 @@ export default async function AdminPatientsPage({
     .select("id, email, nom, prenom, role")
     .order("prenom", { ascending: true })
     .limit(500);
+  const formOpen = String(searchParams?.form || "") === "open";
 
   return (
     <div className="space-y-6">
@@ -59,7 +60,7 @@ export default async function AdminPatientsPage({
           {String(searchParams.success)}
         </div>
       )}
-      <TogglePanel buttonLabel="Créer un patient">
+      <TogglePanel buttonLabel="Créer un patient" defaultOpen={formOpen}>
         <PatientForm users={profiles || []} />
       </TogglePanel>
       <div className="space-y-3">

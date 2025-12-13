@@ -22,6 +22,7 @@ export default async function MedecinPatientsPage({
   const pid = typeof searchParams?.pid === "string" ? String(searchParams.pid) : "";
   const success = typeof searchParams?.success === "string" ? String(searchParams.success) : undefined;
   const error = typeof searchParams?.error === "string" ? String(searchParams.error) : undefined;
+  const formOpen = String(searchParams?.form || "") === "open";
 
   return (
     <div className="space-y-6">
@@ -32,7 +33,7 @@ export default async function MedecinPatientsPage({
       {success && (
         <div className="rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-700">{success}</div>
       )}
-      <TogglePanel buttonLabel="Créer un patient">
+      <TogglePanel buttonLabel="Créer un patient" defaultOpen={formOpen}>
         <PatientForm users={profiles || []} />
       </TogglePanel>
       <div className="space-y-3">
