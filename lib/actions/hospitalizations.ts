@@ -88,7 +88,7 @@ export async function createHospitalizationAction(formData: FormData) {
     created_at: new Date().toISOString(),
   } as const;
 
-  const { error } = await supabase.from("hospitalisations").insert(payload);
+  const { error } = await svc.from("hospitalisations").insert(payload);
   if (error) {
     const ts = Date.now();
     redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
@@ -122,7 +122,7 @@ export async function dischargeHospitalizationAction(formData: FormData) {
   }
 
   const now = new Date().toISOString();
-  const { error } = await supabase
+  const { error } = await service
     .from("hospitalisations")
     .update({ statut: "sortie", date_sortie_reelle: now, updated_at: now })
     .eq("id", id);
@@ -157,7 +157,7 @@ export async function deleteHospitalizationAction(formData: FormData) {
     redirect(`/admin/hospitalizations?error=${encodeURIComponent("Hospitalisation ID manquant")}`);
   }
 
-  const { error } = await supabase.from("hospitalisations").delete().eq("id", id);
+  const { error } = await service.from("hospitalisations").delete().eq("id", id);
   if (error) {
     redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}`);
   }
@@ -209,7 +209,7 @@ export async function updateHospitalizationAction(formData: FormData) {
   if (status !== undefined) payload.statut = status === "active" ? "en_cours" : status === "discharged" ? "sortie" : "en_cours";
   payload.updated_at = new Date().toISOString();
 
-  const { error } = await supabase
+  const { error } = await service
     .from("hospitalisations")
     .update(payload)
     .eq("id", id);

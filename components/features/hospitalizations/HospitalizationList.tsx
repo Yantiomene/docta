@@ -17,7 +17,8 @@ export default async function HospitalizationList() {
       .maybeSingle();
     isAdmin = String(me?.role || "").toLowerCase() === "admin";
   }
-  const { data, error } = await supabase
+  const service = getServiceSupabase();
+  const { data, error } = await service
     .from("hospitalisations")
     .select("id, dossier_patient_id, patient_id, service, chambre, lit, date_admission, date_sortie_reelle, statut")
     .order("date_admission", { ascending: false });

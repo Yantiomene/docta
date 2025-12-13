@@ -59,7 +59,7 @@ export default async function SoinList({ scope = "infirmiere", filters }: { scop
   const role = me?.role ? String(me.role).toLowerCase() : undefined;
   const isAdmin = role === "admin";
 
-  let query = supabase
+  let query = service
     .from("soins")
     .select("id, title, description, scheduled_at, status, assigned_to_nurse_id, patient_id, patients(first_name, last_name)")
     .order("scheduled_at", { ascending: true });
@@ -109,7 +109,7 @@ export default async function SoinList({ scope = "infirmiere", filters }: { scop
   const hospIds = Array.from(new Set(soins.map((s: any) => s.hospitalisation_id).filter(Boolean)));
   let hosps: Record<string, { ward?: string | null; bed?: string | null }> = {};
   if (hospIds.length > 0) {
-    const { data: hospRows } = await supabase
+    const { data: hospRows } = await service
       .from("hospitalisations")
       .select("id, service, lit, statut, date_admission, date_sortie_reelle")
       .in("id", hospIds);
