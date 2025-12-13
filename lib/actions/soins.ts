@@ -79,13 +79,13 @@ export async function createSoinAction(formData: FormData) {
   const parsed = SoinSchema.safeParse({ patientId, typeSoin, title, description, scheduledAt, assignedToNurseId, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
-    redirect(`${basePath}?error=${encodeURIComponent(msg)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(msg)}&form=open`);
   }
 
   // Validate that the patient is hospitalized at the scheduled time
   const scheduled = new Date(scheduledAt);
   if (isNaN(scheduled.getTime())) {
-    redirect(`${basePath}?error=${encodeURIComponent("Date/heure planifiées invalides")}`);
+    redirect(`${basePath}?error=${encodeURIComponent("Date/heure planifiées invalides")}&form=open`);
   }
 
   const { data: hospRows, error: hospFetchErr } = await getServiceSupabase()
@@ -93,7 +93,7 @@ export async function createSoinAction(formData: FormData) {
     .select("id, date_admission, date_sortie_reelle, statut, dossier_patient_id, patient_id")
     .eq("patient_id", patientId);
   if (hospFetchErr) {
-    redirect(`${basePath}?error=${encodeURIComponent(hospFetchErr.message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(hospFetchErr.message)}&form=open`);
   }
   const matchingHosps = (hospRows || []).filter((h: any) => {
     const admitted = new Date(h.date_admission as string);
@@ -114,7 +114,7 @@ export async function createSoinAction(formData: FormData) {
     const name = patient ? `${patient.last_name ?? ""} ${patient.first_name ?? ""}`.trim() : patientId;
     const when = scheduled.toLocaleString();
     const msg = `Aucune hospitalisation active pour ${name} à ${when}`;
-    redirect(`${basePath}?error=${encodeURIComponent(msg)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(msg)}&form=open`);
   }
   // Choisir l’hospitalisation la plus pertinente (la plus récente avant la date planifiée)
   const selectedHosp = matchingHosps
@@ -130,10 +130,10 @@ export async function createSoinAction(formData: FormData) {
       .eq("id", hospitalisationId)
       .maybeSingle();
     if (fkHospErr || !fkHosp || !fkHosp.id) {
-      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation introuvable pour l’ID sélectionné")}`);
+      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation introuvable pour l’ID sélectionné")}&form=open`);
     }
     if (fkHosp.patient_id && fkHosp.patient_id !== patientId) {
-      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation et patient ne correspondent pas")}`);
+      redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation et patient ne correspondent pas")}&form=open`);
     }
   }
 
@@ -158,7 +158,7 @@ export async function createSoinAction(formData: FormData) {
 
   const { error } = await getServiceSupabase().from("soins").insert(payload);
   if (error) {
-    redirect(`${basePath}?error=${encodeURIComponent(error.message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(error.message)}&form=open`);
   }
   redirect(`${basePath}?success=${encodeURIComponent("Soin créé")}`);
 }

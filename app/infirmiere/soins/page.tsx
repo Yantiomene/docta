@@ -18,12 +18,13 @@ export default function InfirmiereSoinsPage({ searchParams }: { searchParams?: {
   const show = searchParams?.show ? String(searchParams.show) : "";
   const basePath = "/infirmiere/soins";
 
-  const mkHref = (nextShow?: string) => {
+  const mkHref = (nextShow?: string, form?: "open" | "closed") => {
     const sp = new URLSearchParams();
     if (start) sp.set("start", start);
     if (end) sp.set("end", end);
     if (q) sp.set("q", q);
     if (nextShow) sp.set("show", nextShow);
+    if (form) sp.set("form", form);
     const qs = sp.toString();
     return `${basePath}${qs ? `?${qs}` : ""}`;
   };
@@ -38,12 +39,12 @@ export default function InfirmiereSoinsPage({ searchParams }: { searchParams?: {
       )}
       <StatusToast message={message} />
       <div className="flex flex-wrap gap-2">
-        <a href={mkHref("create")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition bg-primary text-white hover:bg-primary/90 px-3 py-2">Créer un soin</a>
+        <a href={mkHref("create", "open")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition bg-primary text-white hover:bg-primary/90 px-3 py-2">Créer un soin</a>
         {show && (
-          <a href={mkHref(undefined)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition border border-muted text-foreground hover:bg-muted px-3 py-2">Fermer le formulaire</a>
+          <a href={mkHref(undefined, "closed")} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition border border-muted text-foreground hover:bg-muted px-3 py-2">Fermer le formulaire</a>
         )}
       </div>
-      {show === "create" && <SoinForm />}
+      {(show === "create" || String(searchParams?.form || "") === "open") && <SoinForm />}
       <div className="rounded-lg border p-3">
         <form method="GET" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
           <div>
