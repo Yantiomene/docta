@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { PatientSchema } from "@/lib/schemas";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+import { RolePaths } from "@/lib/rbac";
 
 export async function createPatientAction(formData: FormData) {
   // Extract and sanitize fields
@@ -75,7 +76,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/admin/patients?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}`);
   }
 
   // Extract fields
@@ -96,7 +97,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
   const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender, bloodType });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Invalid fields";
-    redirect(`/admin/patients?error=${encodeURIComponent(msg)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(msg)}`);
   }
 
   const basePayload = {
@@ -125,9 +126,9 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
         .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
         .eq("id", byUser.id);
       if (error) {
-        redirect(`/admin/patients?error=${encodeURIComponent(error.message)}`);
+        redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
       }
-      redirect(`/admin/patients?success=${encodeURIComponent("Dossier lié et mis à jour")}`);
+      redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié et mis à jour")}`);
     }
 
     // No record by user_id: attempt to merge by email or phone
@@ -147,11 +148,7 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
             .eq("phone", phone)
             .maybeSingle();
           if (byPhone && byPhone.id !== byEmail.id) {
-            redirect(
-              `/admin/patients?error=${encodeURIComponent(
-                "Conflit: email et téléphone appartiennent à deux dossiers différents."
-              )}`
-            );
+            redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Conflit: email et téléphone appartiennent à deux dossiers différents.")}`);
           }
         }
         const { error } = await supabase
@@ -159,9 +156,9 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
           .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
           .eq("id", byEmail.id);
         if (error) {
-          redirect(`/admin/patients?error=${encodeURIComponent(error.message)}`);
+          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
         }
-        redirect(`/admin/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
+        redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
       }
     }
 
@@ -177,9 +174,9 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
           .update({ ...basePayload, user_id: selectedUserId, updated_at: new Date().toISOString() })
           .eq("id", byPhone.id);
         if (error) {
-          redirect(`/admin/patients?error=${encodeURIComponent(error.message)}`);
+          redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
         }
-        redirect(`/admin/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
+        redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier lié au compte utilisateur")}`);
       }
     }
 
@@ -188,9 +185,9 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
       .from("patients")
       .insert({ ...basePayload, user_id: selectedUserId, created_at: new Date().toISOString() });
     if (error) {
-      redirect(`/admin/patients?error=${encodeURIComponent(error.message)}`);
+      redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
     }
-    redirect(`/admin/patients?success=${encodeURIComponent("Dossier créé et lié au compte utilisateur")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier créé et lié au compte utilisateur")}`);
   }
 
   // No user selected: allow creation without account, dedupe by email/phone
@@ -206,9 +203,9 @@ export async function staffCreateOrLinkPatientAction(formData: FormData) {
     error = res.error;
   }
   if (error) {
-    redirect(`/admin/patients?error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/admin/patients?success=${encodeURIComponent("Dossier créé (sans compte)")}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier créé (sans compte)")}`);
 }
 
 // Patient self-managed dossier upsert: create or update their own record keyed by user_id
@@ -322,7 +319,7 @@ export async function updatePatientAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/admin/patients?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}`);
   }
 
   const id = (formData.get("patient_id") || "").toString().trim();
@@ -339,14 +336,14 @@ export async function updatePatientAction(formData: FormData) {
     : undefined;
 
   if (!id) {
-    redirect(`/admin/patients?error=${encodeURIComponent("Patient ID manquant")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Patient ID manquant")}`);
   }
 
   // Validate payload
   const parsed = PatientSchema.safeParse({ firstName, lastName, email, phone, dob, gender, bloodType });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Invalid fields";
-    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(msg)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(msg)}`);
   }
 
   const payload = {
@@ -362,9 +359,9 @@ export async function updatePatientAction(formData: FormData) {
 
   const { error } = await supabase.from("patients").update(payload).eq("id", id);
   if (error) {
-    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/admin/patients?pid=${encodeURIComponent(id)}&success=${encodeURIComponent("Dossier mis à jour")}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?pid=${encodeURIComponent(id)}&success=${encodeURIComponent("Dossier mis à jour")}`);
 }
 
 // Admin: delete a patient dossier
@@ -384,17 +381,17 @@ export async function deletePatientAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const isAdmin = role === "admin";
   if (!isAdmin) {
-    redirect(`/admin/patients?error=${encodeURIComponent("Suppression réservée aux administrateurs")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Suppression réservée aux administrateurs")}`);
   }
 
   const id = (formData.get("patient_id") || "").toString().trim();
   if (!id) {
-    redirect(`/admin/patients?error=${encodeURIComponent("Patient ID manquant")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?error=${encodeURIComponent("Patient ID manquant")}`);
   }
 
   const { error } = await supabase.from("patients").delete().eq("id", id);
   if (error) {
-    redirect(`/admin/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?pid=${encodeURIComponent(id)}&error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/admin/patients?success=${encodeURIComponent("Dossier supprimé")}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/patients?success=${encodeURIComponent("Dossier supprimé")}`);
 }

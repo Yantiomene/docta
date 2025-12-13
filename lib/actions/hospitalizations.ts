@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { HospitalizationSchema, UpdateHospitalizationSchema } from "@/lib/schemas";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 import { toUTCFromLocalInput } from "@/lib/utils";
+import { RolePaths } from "@/lib/rbac";
 
 // Staff: create a hospitalization
 export async function createHospitalizationAction(formData: FormData) {
@@ -22,7 +23,7 @@ export async function createHospitalizationAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}`);
   }
 
   const patientId = (formData.get("patientId") || "").toString().trim();
@@ -38,7 +39,7 @@ export async function createHospitalizationAction(formData: FormData) {
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
   }
 
   const svc = getServiceSupabase();
@@ -95,10 +96,10 @@ export async function createHospitalizationAction(formData: FormData) {
   const { error } = await svc.from("hospitalisations").insert(payload);
   if (error) {
     const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
   }
   const ts = Date.now();
-  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation créée")}&ts=${ts}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?success=${encodeURIComponent("Hospitalisation créée")}&ts=${ts}`);
 }
 
 // Staff: discharge a hospitalization (set status + timestamp)
@@ -117,12 +118,12 @@ export async function dischargeHospitalizationAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Accès refusé: rôle staff requis")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}`);
   }
 
   const id = (formData.get("hospitalization_id") || "").toString().trim();
   if (!id) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Hospitalisation ID manquant")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent("Hospitalisation ID manquant")}`);
   }
 
   const now = new Date().toISOString();
@@ -131,9 +132,9 @@ export async function dischargeHospitalizationAction(formData: FormData) {
     .update({ statut: "sortie", date_sortie_reelle: now, updated_at: now })
     .eq("id", id);
   if (error) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Patient sorti")}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?success=${encodeURIComponent("Patient sorti")}`);
 }
 
 // Admin: delete a hospitalization
@@ -153,19 +154,19 @@ export async function deleteHospitalizationAction(formData: FormData) {
   const role = me?.role ? String(me.role).toLowerCase() : "patient";
   const isAdmin = role === "admin";
   if (!isAdmin) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Suppression réservée aux administrateurs")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent("Suppression réservée aux administrateurs")}`);
   }
 
   const id = (formData.get("hospitalization_id") || "").toString().trim();
   if (!id) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Hospitalisation ID manquant")}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent("Hospitalisation ID manquant")}`);
   }
 
   const { error } = await service.from("hospitalisations").delete().eq("id", id);
   if (error) {
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}`);
   }
-  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation supprimée")}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?success=${encodeURIComponent("Hospitalisation supprimée")}`);
 }
 
 // Staff: update a hospitalization (edit fields)
@@ -185,7 +186,7 @@ export async function updateHospitalizationAction(formData: FormData) {
   const STAFF_ROLES = new Set(["admin", "medecin", "infirmiere"]);
   if (!STAFF_ROLES.has(role)) {
     const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Accès refusé: rôle staff requis")}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent("Accès refusé: rôle staff requis")}&ts=${ts}`);
   }
 
   const id = (formData.get("hospitalization_id") || "").toString().trim();
@@ -201,7 +202,7 @@ export async function updateHospitalizationAction(formData: FormData) {
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(msg)}&ts=${ts}`);
   }
 
   const payload: any = {};
@@ -221,8 +222,8 @@ export async function updateHospitalizationAction(formData: FormData) {
     .eq("id", id);
   if (error) {
     const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
+    redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?error=${encodeURIComponent(error.message)}&ts=${ts}`);
   }
   const ts = Date.now();
-  redirect(`/admin/hospitalizations?success=${encodeURIComponent("Hospitalisation mise à jour")}&ts=${ts}`);
+  redirect(`/${RolePaths[role as keyof typeof RolePaths]}/hospitalizations?success=${encodeURIComponent("Hospitalisation mise à jour")}&ts=${ts}`);
 }

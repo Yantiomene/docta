@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { staffCreateOrLinkPatientAction } from "@/lib/actions/patients";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -10,6 +10,10 @@ type UserOption = { id: string; email: string | null; nom: string | null; prenom
 
 export default function PatientForm({ users }: { users: UserOption[] }) {
   const [query, setQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return users;
@@ -20,6 +24,21 @@ export default function PatientForm({ users }: { users: UserOption[] }) {
       return prenom.includes(q) || nom.includes(q) || email.includes(q);
     });
   }, [users, query]);
+
+  useEffect(() => {
+    if (!selectedUserId) {
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      return;
+    }
+    const u = users.find((x) => x.id === selectedUserId);
+    if (u) {
+      setFirstName(u.prenom || "");
+      setLastName(u.nom || "");
+      setEmail(u.email || "");
+    }
+  }, [selectedUserId, users]);
 
   const today = new Date().toISOString().slice(0, 10);
   return (
@@ -42,7 +61,12 @@ export default function PatientForm({ users }: { users: UserOption[] }) {
       </div>
       <div>
         <label className="text-sm">Associer à un utilisateur (optionnel)</label>
-        <Select name="user_id" className="w-full">
+        <Select
+          name="user_id"
+          className="w-full"
+          value={selectedUserId}
+          onChange={(e: any) => setSelectedUserId(e.target.value)}
+        >
           <option value="">Sans compte</option>
           {filtered.map((u) => (
             <option key={u.id} value={u.id}>
@@ -53,15 +77,33 @@ export default function PatientForm({ users }: { users: UserOption[] }) {
       </div>
       <div>
         <label className="text-sm">First name</label>
-        <Input name="firstName" required minLength={2} />
+        <Input
+          name="firstName"
+          required
+          minLength={2}
+          value={firstName}
+          onChange={(e: any) => setFirstName(e.target.value)}
+        />
       </div>
       <div>
         <label className="text-sm">Last name</label>
-        <Input name="lastName" required minLength={2} />
+        <Input
+          name="lastName"
+          required
+          minLength={2}
+          value={lastName}
+          onChange={(e: any) => setLastName(e.target.value)}
+        />
       </div>
       <div>
         <label className="text-sm">Email (optional)</label>
-        <Input type="email" name="email" inputMode="email" />
+        <Input
+          type="email"
+          name="email"
+          inputMode="email"
+          value={email}
+          onChange={(e: any) => setEmail(e.target.value)}
+        />
       </div>
       <div>
         <label className="text-sm">Phone (optional)</label>
