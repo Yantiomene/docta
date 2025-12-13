@@ -4,6 +4,7 @@ import PatientSearch from "@/components/features/patients/PatientSearch";
 import PatientSuggestions from "@/components/features/patients/PatientSuggestions";
 import PatientDrawer from "@/components/features/patients/PatientDrawer";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import TogglePanel from "@/components/features/common/TogglePanel";
 
 export default async function InfirmierePatientsPage({
   searchParams,
@@ -31,7 +32,9 @@ export default async function InfirmierePatientsPage({
       {success && (
         <div className="rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-700">{success}</div>
       )}
-      <PatientForm users={profiles || []} />
+      <TogglePanel buttonLabel="Créer un patient">
+        <PatientForm users={profiles || []} />
+      </TogglePanel>
       <div className="space-y-3">
         <PatientSearch />
         <PatientSuggestions query={q} />

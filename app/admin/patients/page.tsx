@@ -5,6 +5,7 @@ import PatientSuggestions from "@/components/features/patients/PatientSuggestion
 import PatientDrawer from "@/components/features/patients/PatientDrawer";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
 import { redirect } from "next/navigation";
+import TogglePanel from "@/components/features/common/TogglePanel";
 
 export default async function AdminPatientsPage({
   searchParams,
@@ -58,7 +59,9 @@ export default async function AdminPatientsPage({
           {String(searchParams.success)}
         </div>
       )}
-      <PatientForm users={profiles || []} />
+      <TogglePanel buttonLabel="Créer un patient">
+        <PatientForm users={profiles || []} />
+      </TogglePanel>
       <div className="space-y-3">
         <PatientSearch />
         <PatientSuggestions query={typeof searchParams?.q === "string" ? String(searchParams.q) : ""} />

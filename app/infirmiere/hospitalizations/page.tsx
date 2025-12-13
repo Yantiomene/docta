@@ -1,5 +1,6 @@
 import HospitalizationForm from "@/components/features/hospitalizations/HospitalizationForm";
 import HospitalizationList from "@/components/features/hospitalizations/HospitalizationList";
+import TogglePanel from "@/components/features/common/TogglePanel";
 
 export default function InfirmiereHospitalizationsPage({
   searchParams,
@@ -26,7 +27,9 @@ export default function InfirmiereHospitalizationsPage({
 
       <div>
         <h2 className="text-lg font-medium mb-2">Nouvelle hospitalisation</h2>
-        <HospitalizationForm key={ts ?? "form"} />
+        <TogglePanel buttonLabel="Créer une hospitalisation">
+          <HospitalizationForm key={ts ?? "form"} />
+        </TogglePanel>
       </div>
 
       <div>
