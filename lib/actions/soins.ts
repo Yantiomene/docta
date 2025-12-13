@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { SoinSchema } from "@/lib/schemas";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+import { toUTCFromLocalInput } from "@/lib/utils";
 
 // Helper: derive HH:MM:SS from a datetime-local string
 function extractHeurePrevue(scheduledAt: string): string {
@@ -10,7 +11,12 @@ function extractHeurePrevue(scheduledAt: string): string {
   const m = scheduledAt.match(/T(\d{2}:\d{2})/);
   if (m && m[1]) return `${m[1]}:00`;
   try {
-    return new Date(scheduledAt).toISOString().slice(11, 19);
+    const d = new Date(scheduledAt);
+    if (isNaN(d.getTime())) return "00:00:00";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${hh}:${mi}:00`;
   } catch {
     return "00:00:00";
   }
@@ -22,9 +28,20 @@ function extractDateDebut(scheduledAt: string): string {
   const parts = scheduledAt.split("T");
   if (parts[0]) return parts[0];
   try {
-    return new Date(scheduledAt).toISOString().slice(0, 10);
+    const d = new Date(scheduledAt);
+    if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    return `${yyyy}-${mm}-${dd}`;
   } catch {
-    return new Date().toISOString().slice(0, 10);
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    return `${yyyy}-${mm}-${dd}`;
   }
 }
 
@@ -124,12 +141,13 @@ export async function createSoinAction(formData: FormData) {
   const heurePrevue = extractHeurePrevue(scheduledAt);
   const dateDebut = extractDateDebut(scheduledAt);
 
+  const scheduledUtc = toUTCFromLocalInput(scheduledAt) || scheduledAt;
   const payload = {
     patient_id: patientId,
     type_soin: typeSoin || title || "Autre",
     title,
     description: description ?? "",
-    scheduled_at: scheduledAt,
+    scheduled_at: scheduledUtc,
     date_debut: dateDebut,
     heure_prevue: heurePrevue,
     assigned_to_nurse_id: assignedToNurseId ?? null,

@@ -5,6 +5,7 @@ import Select from "@/components/ui/select";
 import Button from "@/components/ui/button";
 import { createSoinAction } from "@/lib/actions/soins";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+import { localInputNow } from "@/lib/utils";
 
 export default async function SoinForm() {
   const supabase = getServerSupabase();
@@ -21,7 +22,7 @@ export default async function SoinForm() {
     role = me?.role ? String(me.role).toLowerCase() : undefined;
   }
 
-  const todayIso = new Date().toISOString().slice(0, 16);
+  const todayIso = localInputNow();
   const commonTitles = [
     "Pansement",
     "Contrôle pansement",

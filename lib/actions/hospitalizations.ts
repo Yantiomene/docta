@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { HospitalizationSchema, UpdateHospitalizationSchema } from "@/lib/schemas";
 import { getServerSupabase, getServiceSupabase } from "@/lib/supabaseServer";
+import { toUTCFromLocalInput } from "@/lib/utils";
 
 // Staff: create a hospitalization
 export async function createHospitalizationAction(formData: FormData) {
@@ -28,12 +29,12 @@ export async function createHospitalizationAction(formData: FormData) {
   const ward = (formData.get("ward") || "").toString().trim() || undefined;
   const room = (formData.get("room") || "").toString().trim() || undefined;
   const bed = (formData.get("bed") || "").toString().trim() || undefined;
-  const admittedAt = (formData.get("admittedAt") || "").toString().trim();
-  const dischargedAt = (formData.get("dischargedAt") || "").toString().trim() || undefined;
+  const admittedAtInput = (formData.get("admittedAt") || "").toString().trim();
+  const dischargedAtInput = (formData.get("dischargedAt") || "").toString().trim() || undefined;
   const statusRaw = (formData.get("status") || "active").toString().trim();
   const status = statusRaw as "active" | "discharged" | "planned";
 
-  const parsed = HospitalizationSchema.safeParse({ patientId, ward, room, bed, admittedAt, dischargedAt, status });
+  const parsed = HospitalizationSchema.safeParse({ patientId, ward, room, bed, admittedAt: admittedAtInput, dischargedAt: dischargedAtInput, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     const ts = Date.now();
@@ -75,6 +76,9 @@ export async function createHospitalizationAction(formData: FormData) {
     }
   }
 
+  const admittedAtUtc = admittedAtInput ? toUTCFromLocalInput(admittedAtInput) : null;
+  const dischargedAtUtc = dischargedAtInput ? toUTCFromLocalInput(dischargedAtInput) : null;
+
   const statut = status === "active" ? "en_cours" : status === "discharged" ? "sortie" : "en_cours";
   const payload = {
     dossier_patient_id: dossierId ?? null,
@@ -82,8 +86,8 @@ export async function createHospitalizationAction(formData: FormData) {
     service: ward ?? null,
     chambre: room ?? null,
     lit: bed ?? null,
-    date_admission: admittedAt,
-    date_sortie_reelle: dischargedAt ?? null,
+    date_admission: admittedAtUtc,
+    date_sortie_reelle: dischargedAtUtc ?? null,
     statut,
     created_at: new Date().toISOString(),
   } as const;
@@ -188,12 +192,12 @@ export async function updateHospitalizationAction(formData: FormData) {
   const ward = (formData.get("ward") || "").toString().trim() || undefined;
   const room = (formData.get("room") || "").toString().trim() || undefined;
   const bed = (formData.get("bed") || "").toString().trim() || undefined;
-  const admittedAt = (formData.get("admittedAt") || "").toString().trim() || undefined;
-  const dischargedAt = (formData.get("dischargedAt") || "").toString().trim() || undefined;
+  const admittedAtInput = (formData.get("admittedAt") || "").toString().trim() || undefined;
+  const dischargedAtInput = (formData.get("dischargedAt") || "").toString().trim() || undefined;
   const statusRaw = (formData.get("status") || "").toString().trim() || undefined;
   const status = statusRaw ? (statusRaw as "active" | "discharged" | "planned") : undefined;
 
-  const parsed = UpdateHospitalizationSchema.safeParse({ id, ward, room, bed, admittedAt, dischargedAt, status });
+  const parsed = UpdateHospitalizationSchema.safeParse({ id, ward, room, bed, admittedAt: admittedAtInput, dischargedAt: dischargedAtInput, status });
   if (!parsed.success) {
     const msg = parsed.error.issues?.[0]?.message || "Champs invalides";
     const ts = Date.now();
@@ -204,8 +208,10 @@ export async function updateHospitalizationAction(formData: FormData) {
   if (ward !== undefined) payload.service = ward || null;
   if (room !== undefined) payload.chambre = room || null;
   if (bed !== undefined) payload.lit = bed || null;
-  if (admittedAt !== undefined) payload.date_admission = admittedAt;
-  if (dischargedAt !== undefined) payload.date_sortie_reelle = dischargedAt || null;
+  const admittedAtUtc2 = admittedAtInput ? toUTCFromLocalInput(admittedAtInput) : null;
+  const dischargedAtUtc2 = dischargedAtInput ? toUTCFromLocalInput(dischargedAtInput) : null;
+  if (admittedAtInput !== undefined) payload.date_admission = admittedAtUtc2;
+  if (dischargedAtInput !== undefined) payload.date_sortie_reelle = dischargedAtUtc2 || null;
   if (status !== undefined) payload.statut = status === "active" ? "en_cours" : status === "discharged" ? "sortie" : "en_cours";
   payload.updated_at = new Date().toISOString();
 

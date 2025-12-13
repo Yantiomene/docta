@@ -5,6 +5,7 @@ import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 import { updateHospitalizationAction, deleteHospitalizationAction } from "@/lib/actions/hospitalizations";
 import DeleteConfirm from "@/components/features/patients/DeleteConfirm";
+import { toLocalInput } from "@/lib/utils";
 
 type HospitalizationProps = {
   hospitalization: {
@@ -20,19 +21,7 @@ type HospitalizationProps = {
   isAdmin?: boolean;
 };
 
-function toLocalInput(value: string | null): string {
-  if (!value) return "";
-  const d = new Date(value);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mi = pad(d.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-}
-
-export default function HospitalizationDrawer({ hospitalization, isAdmin = false }: HospitalizationProps) {
+export default function HospitalizationDrawer({ hospitalization, isAdmin }: HospitalizationProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"active" | "discharged" | "planned">(hospitalization.status);
   const deleteFormId = `delete-hosp-${hospitalization.id}`;
