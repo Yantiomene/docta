@@ -71,30 +71,10 @@ export async function createSoinAction(formData: FormData) {
     redirect(`${basePath}?error=${encodeURIComponent("Date/heure planifiées invalides")}`);
   }
 
-  const { data: hosps, error: hospErr } = await supabase
-    .from("patients")
-    .select("user_id")
-    .eq("id", patientId)
-    .maybeSingle();
-  if (hospErr) {
-    redirect(`${basePath}?error=${encodeURIComponent(hospErr.message)}`);
-  }
-  const profileId = (hosps as any)?.user_id as string | undefined;
-  if (!profileId) {
-    redirect(`${basePath}?error=${encodeURIComponent("Patient non lié à un profil utilisateur")}`);
-  }
-  const { data: dossiers, error: dossierErr } = await getServiceSupabase()
-    .from("dossiers_patients")
-    .select("id")
-    .eq("patient_id", profileId);
-  if (dossierErr) {
-    redirect(`${basePath}?error=${encodeURIComponent(dossierErr.message)}`);
-  }
-  const dossierIds = (dossiers || []).map((d: any) => d.id);
   const { data: hospRows, error: hospFetchErr } = await getServiceSupabase()
     .from("hospitalisations")
-    .select("id, date_admission, date_sortie_reelle, statut, dossier_patient_id")
-    .in("dossier_patient_id", dossierIds.length ? dossierIds : ["00000000-0000-0000-0000-000000000000"]);
+    .select("id, date_admission, date_sortie_reelle, statut, dossier_patient_id, patient_id")
+    .or(`patient_id.eq.${patientId},dossier_patient_id.is.notnull`);
   if (hospFetchErr) {
     redirect(`${basePath}?error=${encodeURIComponent(hospFetchErr.message)}`);
   }
@@ -121,23 +101,13 @@ export async function createSoinAction(formData: FormData) {
   if (hospitalisationId) {
     const { data: fkHosp, error: fkHospErr } = await getServiceSupabase()
       .from("hospitalisations")
-      .select("id, dossier_patient_id")
+      .select("id, dossier_patient_id, patient_id")
       .eq("id", hospitalisationId)
       .maybeSingle();
     if (fkHospErr || !fkHosp || !fkHosp.id) {
       redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation introuvable pour l’ID sélectionné")}`);
     }
-    const { data: dossier } = await getServiceSupabase()
-      .from("dossiers_patients")
-      .select("patient_id")
-      .eq("id", fkHosp.dossier_patient_id)
-      .maybeSingle();
-    const { data: patientRow } = await getServiceSupabase()
-      .from("patients")
-      .select("user_id")
-      .eq("id", patientId)
-      .maybeSingle();
-    if (!dossier || !patientRow || !dossier.patient_id || !patientRow.user_id || dossier.patient_id !== patientRow.user_id) {
+    if (fkHosp.patient_id && fkHosp.patient_id !== patientId) {
       redirect(`${basePath}?error=${encodeURIComponent("Hospitalisation et patient ne correspondent pas")}`);
     }
   }

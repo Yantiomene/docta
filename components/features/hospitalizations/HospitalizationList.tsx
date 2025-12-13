@@ -19,7 +19,7 @@ export default async function HospitalizationList() {
   }
   const { data, error } = await supabase
     .from("hospitalisations")
-    .select("id, dossier_patient_id, service, chambre, lit, date_admission, date_sortie_reelle, statut")
+    .select("id, dossier_patient_id, patient_id, service, chambre, lit, date_admission, date_sortie_reelle, statut")
     .order("date_admission", { ascending: false });
 
   if (error) {
@@ -31,8 +31,10 @@ export default async function HospitalizationList() {
   const rows = (data ?? []) as any[];
 
   const dossierIds = Array.from(new Set(rows.map((h: any) => h.dossier_patient_id).filter(Boolean)));
+  const patientIds = Array.from(new Set(rows.map((h: any) => h.patient_id).filter(Boolean)));
   let dossierToProfileId: Record<string, string> = {};
   let profileMap: Record<string, { nom?: string | null; prenom?: string | null }> = {};
+  let patientMap: Record<string, { first_name?: string | null; last_name?: string | null }> = {};
   if (dossierIds.length > 0) {
     const service = getServiceSupabase();
     const { data: dossiers } = await service
@@ -52,6 +54,16 @@ export default async function HospitalizationList() {
         profileMap[p.id] = { nom: p.nom ?? null, prenom: p.prenom ?? null };
       });
     }
+  }
+  if (patientIds.length > 0) {
+    const service = getServiceSupabase();
+    const { data: patients } = await service
+      .from("patients")
+      .select("id, first_name, last_name")
+      .in("id", patientIds);
+    (patients || []).forEach((p: any) => {
+      patientMap[p.id] = { first_name: p.first_name ?? null, last_name: p.last_name ?? null };
+    });
   }
 
   if (!rows.length) {
@@ -78,7 +90,13 @@ export default async function HospitalizationList() {
             const dossiersPatientId = (h as any).dossier_patient_id as string | undefined;
             const profId = dossiersPatientId ? dossierToProfileId[dossiersPatientId] : undefined;
             const prof = profId ? profileMap[profId] : undefined;
-            const name = prof ? `${prof.nom ?? ""} ${prof.prenom ?? ""}`.trim() : "";
+            const pid = (h as any).patient_id as string | undefined;
+            const pat = pid ? patientMap[pid] : undefined;
+            const name = pat
+              ? `${pat.last_name ?? ""} ${pat.first_name ?? ""}`.trim()
+              : prof
+              ? `${prof.nom ?? ""} ${prof.prenom ?? ""}`.trim()
+              : "";
             const statutFr = String((h as any).statut || "");
             const status = statutFr === "en_cours" ? "active" : statutFr === "sortie" ? "discharged" : "planned";
             return (

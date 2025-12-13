@@ -46,40 +46,39 @@ export async function createHospitalizationAction(formData: FormData) {
     .select("id, user_id, dob")
     .eq("id", patientId)
     .maybeSingle();
-  if (patientErr || !patientRow || !patientRow.user_id) {
-    const ts = Date.now();
-    redirect(`/admin/hospitalizations?error=${encodeURIComponent("Patient introuvable ou non lié à un profil utilisateur")}&ts=${ts}`);
-  }
-  const profileId = String(patientRow.user_id);
-  const { data: dossier, error: dossierErr } = await svc
-    .from("dossiers_patients")
-    .select("id")
-    .eq("patient_id", profileId)
-    .maybeSingle();
-  let dossierId = dossier?.id as string | undefined;
-  if (!dossierId) {
-    const numero = `DP-${Date.now()}`;
-    const { data: created, error: createdErr } = await svc
+  let dossierId: string | undefined;
+  let patientIdFk: string | undefined = patientRow?.id as string | undefined;
+  const profileId = patientRow?.user_id ? String(patientRow.user_id) : undefined;
+  if (profileId) {
+    const { data: dossier, error: dossierErr } = await svc
       .from("dossiers_patients")
-      .insert({
-        patient_id: profileId,
-        numero_dossier: numero,
-        date_naissance: patientRow.dob ?? null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
       .select("id")
-      .single();
-    if (createdErr || !created) {
-      const ts = Date.now();
-      redirect(`/admin/hospitalizations?error=${encodeURIComponent("Création du dossier patient impossible")}&ts=${ts}`);
+      .eq("patient_id", profileId)
+      .maybeSingle();
+    dossierId = dossier?.id as string | undefined;
+    if (!dossierId) {
+      const numero = `DP-${Date.now()}`;
+      const { data: created, error: createdErr } = await svc
+        .from("dossiers_patients")
+        .insert({
+          patient_id: profileId,
+          numero_dossier: numero,
+          date_naissance: patientRow?.dob ?? null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (!createdErr && created) {
+        dossierId = created.id as string;
+      }
     }
-    dossierId = created.id as string;
   }
 
   const statut = status === "active" ? "en_cours" : status === "discharged" ? "sortie" : "en_cours";
   const payload = {
-    dossier_patient_id: dossierId,
+    dossier_patient_id: dossierId ?? null,
+    patient_id: patientIdFk ?? null,
     service: ward ?? null,
     chambre: room ?? null,
     lit: bed ?? null,

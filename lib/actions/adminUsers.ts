@@ -40,6 +40,11 @@ export async function updateUserRoleAction(formData: FormData) {
     redirect(`/admin/users?error=${encodeURIComponent(error.message)}`);
   }
 
+  await admin.auth.admin.updateUserById(targetUserId, {
+    user_metadata: { role: newRole },
+    app_metadata: { role: newRole },
+  });
+
   redirect(`/admin/users?success=${encodeURIComponent("Role updated")}`);
 }
 
